@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-card: #ffffff;
+    --border-color: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+  }
+
+  html.dark {
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-card: #121212;
+    --border-color: #262626;
+    --text-primary: #f8fafc;
+    --text-secondary: #a3a3a3;
+    --text-muted: #737373;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    transition: background-color 0.25s ease, color 0.25s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+.font-luxury {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.font-editorial {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.font-display {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.font-tactical {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Luxury button and badge glow styles */
+.luxury-cta {
+  background: linear-gradient(135deg, #10b981 0%, #059669 45%, #047857 75%, #065f46 100%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+              0 8px 24px -4px rgba(16, 185, 129, 0.4),
+              0 2px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+.luxury-cta:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 45%, #059669 75%, #047857 100%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+              0 12px 32px -4px rgba(16, 185, 129, 0.55),
+              0 4px 12px -2px rgba(0, 0, 0, 0.6);
+}
+
+.luxury-gold-cta {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 50%, #b45309 100%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+              0 8px 24px -4px rgba(245, 158, 11, 0.4),
+              0 2px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes luxury-shimmer {
+  0% { transform: translateX(-150%) rotate(25deg); }
+  100% { transform: translateX(250%) rotate(25deg); }
+}
+
+.animate-luxury-shimmer {
+  animation: luxury-shimmer 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes dash-flow {
+  from {
+    stroke-dashoffset: 30;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-dash-flow {
+  animation: dash-flow 0.8s linear infinite !important;
+}
+
+/* Custom Light & Dark Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #000000;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #404040;
+}
+

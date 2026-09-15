@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix Remix 04/09/2026 -21:48 second",
+  "description": "Realistic football pitch builder and tactical squad manager with precise markings, custom formations, player cards, and kit customization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
