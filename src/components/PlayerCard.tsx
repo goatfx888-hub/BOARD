@@ -50,7 +50,7 @@ const PlayerCardComponent: React.FC<PlayerCardProps> = ({
     <div
       onClick={onClick}
       onDoubleClick={onDoubleClick}
-      className={`group relative flex flex-col items-center cursor-pointer select-none transition-[transform,filter] duration-200 ease-out transform ${
+      className={`group relative flex flex-col items-center cursor-pointer select-none touch-none transition-[transform,filter] duration-200 ease-out transform ${
         isSelected
           ? 'scale-110 z-30 drop-shadow-[0_0_12px_rgba(16,185,129,0.85)]'
           : 'hover:scale-105 hover:z-20'

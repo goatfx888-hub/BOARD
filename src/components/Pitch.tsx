@@ -277,10 +277,24 @@ const PitchComponent: React.FC<PitchProps> = ({
   const isLight = theme === 'light';
   const pitchContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Prevent mobile browsers (iOS Safari, Android Chrome) from scrolling or rubber-banding
+  // when touching and dragging players, the ball, or tactical drawings
+  const onPitchTouchMove = useCallback((e: TouchEvent) => {
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+  }, []);
+
   // Sync ref to internal container ref and external boardRef
   const setPitchContainerRef = useCallback(
     (node: HTMLDivElement | null) => {
+      if (pitchContainerRef.current) {
+        pitchContainerRef.current.removeEventListener('touchmove', onPitchTouchMove);
+      }
       pitchContainerRef.current = node;
+      if (node) {
+        node.addEventListener('touchmove', onPitchTouchMove, { passive: false });
+      }
       if (boardRef) {
         if (typeof boardRef === 'function') {
           (boardRef as (instance: HTMLDivElement | null) => void)(node);
@@ -289,8 +303,17 @@ const PitchComponent: React.FC<PitchProps> = ({
         }
       }
     },
-    [boardRef]
+    [boardRef, onPitchTouchMove]
   );
+
+  useEffect(() => {
+    const container = pitchContainerRef.current;
+    return () => {
+      if (container) {
+        container.removeEventListener('touchmove', onPitchTouchMove);
+      }
+    };
+  }, [onPitchTouchMove]);
 
   // Vanilla JS Tactic Animator Engine
   const animatorRef = useRef<TacticAnimator>(new TacticAnimator());
@@ -609,6 +632,9 @@ const PitchComponent: React.FC<PitchProps> = ({
     // If drawing tool active (and not hand/select tool), do not capture player drag
     if (isDrawingMode && activeTool !== 'hand' && activeTool !== 'select') return;
 
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     e.stopPropagation();
 
     const target = e.currentTarget;
@@ -645,6 +671,9 @@ const PitchComponent: React.FC<PitchProps> = ({
 
     const handlePointerMove = (moveEv: PointerEvent) => {
       if (moveEv.pointerId !== pointerId) return;
+      if (moveEv.cancelable) {
+        moveEv.preventDefault();
+      }
 
       const deltaX = moveEv.clientX - startX;
       const deltaY = moveEv.clientY - startY;
@@ -779,7 +808,7 @@ const PitchComponent: React.FC<PitchProps> = ({
       setDraggingPlayerId(null);
     };
 
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
     window.addEventListener('pointerup', handlePointerUp);
     window.addEventListener('pointercancel', handlePointerUp);
   };
@@ -853,6 +882,10 @@ const PitchComponent: React.FC<PitchProps> = ({
   // Handle dragging the football
   const handlePointerDownBall = (e: React.PointerEvent) => {
     if (isDrawingMode && activeTool !== 'hand' && activeTool !== 'select') return;
+
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     e.stopPropagation();
 
     setBallOwnerId(null);
@@ -882,6 +915,9 @@ const PitchComponent: React.FC<PitchProps> = ({
 
     const handlePointerMove = (moveEv: PointerEvent) => {
       if (moveEv.pointerId !== pointerId) return;
+      if (moveEv.cancelable) {
+        moveEv.preventDefault();
+      }
 
       const deltaX = moveEv.clientX - startX;
       const deltaY = moveEv.clientY - startY;
@@ -996,7 +1032,7 @@ const PitchComponent: React.FC<PitchProps> = ({
       }
     };
 
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
     window.addEventListener('pointerup', handlePointerUp);
     window.addEventListener('pointercancel', handlePointerUp);
   };
@@ -1558,7 +1594,7 @@ const PitchComponent: React.FC<PitchProps> = ({
         <div
           ref={setPitchContainerRef}
           onClick={handlePitchClick}
-          className={`relative isolate overflow-hidden ${pitchAspectClass} transition-transform duration-500 ease-out ${getPerspectiveTransform()}`}
+          className={`relative isolate overflow-hidden touch-none select-none ${pitchAspectClass} transition-transform duration-500 ease-out ${getPerspectiveTransform()}`}
         >
         {/* Realistic Pitch Background SVG */}
         <PitchSVG texture={texture} lighting={lighting} orientation={orientation} showCornerFlags showGoals>
@@ -1581,7 +1617,7 @@ const PitchComponent: React.FC<PitchProps> = ({
 
           {/* Starting XI Players & Football positioned on Pitch Grid */}
           <div
-            className={`absolute inset-0 ${
+            className={`absolute inset-0 touch-none select-none ${
               isEffectiveDrawingActive && activeTool !== 'hand' && activeTool !== 'select'
                 ? 'z-30 pointer-events-none'
                 : 'z-50 pointer-events-auto'

@@ -189,6 +189,10 @@ const DrawingOverlayComponent: React.FC<DrawingOverlayProps> = ({
       return;
     }
 
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+
     const pt = getCoordinates(e);
     if (!pt) return;
 
@@ -211,6 +215,10 @@ const DrawingOverlayComponent: React.FC<DrawingOverlayProps> = ({
 
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!isDrawingMode) return;
+
+    if ((isDrawing || draggingHandle) && e.cancelable) {
+      e.preventDefault();
+    }
 
     // 1. Handle dragging an existing element handle (Start, End, or Curve Bend point)
     if (draggingHandle && selectedId && onUpdateElement) {
@@ -484,7 +492,7 @@ const DrawingOverlayComponent: React.FC<DrawingOverlayProps> = ({
   const selectedElem = activeElements.find((e) => e.id === selectedId);
 
   return (
-    <div className="absolute inset-0 w-full h-full pointer-events-none">
+    <div className="absolute inset-0 w-full h-full pointer-events-none touch-none select-none">
       <svg
         ref={svgRef}
         className={`absolute inset-0 w-full h-full touch-none select-none ${
@@ -761,7 +769,7 @@ const DrawingOverlayComponent: React.FC<DrawingOverlayProps> = ({
           const cY = selectedElem.controlY !== undefined ? pctToSvgY(selectedElem.controlY) : (sY + eY) / 2;
 
           return (
-            <g className="drawing-handle pointer-events-auto">
+            <g className="drawing-handle pointer-events-auto touch-none select-none">
               {/* Curve tangent chord guide line */}
               {isCurved && (
                 <line
@@ -798,6 +806,7 @@ const DrawingOverlayComponent: React.FC<DrawingOverlayProps> = ({
                 strokeWidth="2.5"
                 className="cursor-move drop-shadow-md hover:scale-125 transition-transform"
                 onPointerDown={(e) => {
+                  if (e.cancelable) e.preventDefault();
                   e.stopPropagation();
                   setDraggingHandle('start');
                   setHandlePointerId(e.pointerId);
@@ -814,6 +823,7 @@ const DrawingOverlayComponent: React.FC<DrawingOverlayProps> = ({
                 strokeWidth="2.5"
                 className="cursor-move drop-shadow-md hover:scale-125 transition-transform"
                 onPointerDown={(e) => {
+                  if (e.cancelable) e.preventDefault();
                   e.stopPropagation();
                   setDraggingHandle('end');
                   setHandlePointerId(e.pointerId);
@@ -825,6 +835,7 @@ const DrawingOverlayComponent: React.FC<DrawingOverlayProps> = ({
                 <g
                   className="cursor-grab active:cursor-grabbing hover:scale-125 transition-transform"
                   onPointerDown={(e) => {
+                    if (e.cancelable) e.preventDefault();
                     e.stopPropagation();
                     setDraggingHandle('control');
                     setHandlePointerId(e.pointerId);
