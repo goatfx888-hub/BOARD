@@ -574,7 +574,7 @@ export default function App() {
           {/* Quick Exit Fullscreen button floating top right for instant touch exit on phones & tablets */}
           <button
             onClick={handleToggleFullscreen}
-            className={`absolute top-2 right-2 z-[10000] font-extrabold px-2.5 py-1 rounded-xl shadow-xl flex items-center gap-1.5 text-xs active:scale-95 transition cursor-pointer backdrop-blur-md ${
+            className={`hidden sm:flex absolute top-2 right-2 z-[10000] font-extrabold px-2.5 py-1 rounded-xl shadow-xl items-center gap-1.5 text-xs active:scale-95 transition cursor-pointer backdrop-blur-md ${
               isLight
                 ? 'bg-white/95 hover:bg-slate-100 text-slate-800 border border-slate-300 shadow-lg'
                 : 'bg-neutral-900/90 hover:bg-neutral-800 text-emerald-400 border border-emerald-500/50'

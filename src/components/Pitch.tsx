@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { PitchSVG } from './PitchSVG';
 import { PlayerCard } from './PlayerCard';
 import { DrawingOverlay } from './DrawingOverlay';
-import { DrawingToolbar } from './DrawingToolbar';
+import { DrawingToolbar, TACTICAL_COLORS } from './DrawingToolbar';
 import { CountdownOverlay } from './CountdownOverlay';
 import { KeyframesRecordedStudio } from './KeyframesRecordedStudio';
 import { useTheme } from '../context/ThemeContext';
@@ -46,6 +46,15 @@ import {
   Scan,
   X,
   Box,
+  Hand,
+  ArrowUpRight,
+  MoveUpRight,
+  CornerUpRight,
+  Minus,
+  Square,
+  Eraser,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 import { TacticalZonesOverlay, ZoneMode } from './TacticalZonesOverlay';
 
@@ -1127,17 +1136,26 @@ const PitchComponent: React.FC<PitchProps> = ({
   const pitchAspectClass = isFullscreen
     ? (orientation === 'horizontal'
         ? 'h-full max-h-full max-w-full aspect-[10/7] flex items-center justify-center'
-        : 'h-full max-h-full max-w-full aspect-[7/10] flex items-center justify-center')
+        : 'h-full max-h-full w-full max-w-full aspect-[9/16] md:aspect-[7/10] flex items-center justify-center')
     : `w-full ${containerAspect}`;
 
+  // In fullscreen mode on desktop (md+ screens), drawing can stay always ready; on mobile, it follows whether Tools are open
+  const isEffectiveDrawingActive = isFullscreen
+    ? (isDrawingMode || (typeof window !== 'undefined' && window.innerWidth >= 768))
+    : isDrawingMode;
+
   return (
-    <div className={`relative w-full ${pitchWidthClass} mx-auto flex flex-col items-center select-none ${isFullscreen ? 'p-1 sm:p-1.5 gap-1 sm:gap-1.5 justify-between min-h-0' : 'py-1 gap-2'}`}>
+    <div className={`relative w-full ${pitchWidthClass} mx-auto flex flex-col items-center select-none ${isFullscreen ? 'p-0.5 sm:p-1.5 gap-1 sm:gap-1.5 justify-between min-h-0' : 'py-1 gap-2'}`}>
       {/* Match Teams & Drawing Tools Control Bar */}
-      <div className={`w-full flex flex-wrap items-center justify-center backdrop-blur-md rounded-xl shadow-md text-xs gap-1.5 sm:gap-2.5 shrink-0 z-30 ${
+      <div className={`w-full flex ${
+        isFullscreen
+          ? 'flex-nowrap overflow-x-auto justify-start sm:justify-center px-1.5 sm:px-2 py-1 max-w-3xl scrollbar-none gap-1 sm:gap-2'
+          : 'flex-wrap items-center justify-center px-3 py-1.5 gap-1.5 sm:gap-2.5'
+      } backdrop-blur-md rounded-xl shadow-md text-xs shrink-0 z-30 ${
         isLight
           ? 'bg-white/95 border border-slate-200 shadow-slate-200/60'
           : 'bg-neutral-900/95 border border-neutral-800'
-      } ${isFullscreen ? 'px-2 py-1 max-w-3xl' : 'px-3 py-1.5'}`}>
+      }`}>
         {/* Team Selector */}
         {onMatchModeChange ? (
           <div className={`flex items-center p-1 rounded-xl border gap-1 shrink-0 ${
@@ -1148,7 +1166,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                 onMatchModeChange('home_only');
                 onSelectTeam?.('home');
               }}
-              className={`px-2 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-1.5 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
                 matchMode === 'home_only'
                   ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold'
                   : isLight
@@ -1161,12 +1179,13 @@ const PitchComponent: React.FC<PitchProps> = ({
                 className="w-2.5 h-2.5 rounded-full border border-slate-900 shrink-0"
                 style={{ backgroundColor: squad.kit.primaryColor }}
               />
-              <span>Home Team</span>
+              <span className={isFullscreen ? 'hidden sm:inline' : ''}>Home Team</span>
+              <span className={isFullscreen ? 'inline sm:hidden' : 'hidden'}>Home</span>
             </button>
 
             <button
               onClick={() => onMatchModeChange('home_vs_away')}
-              className={`px-2 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-1.5 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
                 matchMode === 'home_vs_away'
                   ? 'bg-amber-500 text-slate-950 shadow-md font-extrabold'
                   : isLight
@@ -1175,7 +1194,8 @@ const PitchComponent: React.FC<PitchProps> = ({
               }`}
               title="Display both teams (Home vs Away)"
             >
-              <span>Both (VS)</span>
+              <span className={isFullscreen ? 'hidden sm:inline' : ''}>Both (VS)</span>
+              <span className={isFullscreen ? 'inline sm:hidden' : 'hidden'}>Both</span>
             </button>
 
             {awaySquad && (
@@ -1184,7 +1204,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                   onMatchModeChange('away_only');
                   onSelectTeam?.('away');
                 }}
-                className={`px-2 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-1.5 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
                   matchMode === 'away_only'
                     ? 'bg-rose-500 text-white shadow-md font-extrabold'
                     : isLight
@@ -1197,7 +1217,8 @@ const PitchComponent: React.FC<PitchProps> = ({
                   className="w-2.5 h-2.5 rounded-full border border-slate-900 shrink-0"
                   style={{ backgroundColor: awaySquad.kit.primaryColor }}
                 />
-                <span>Away Team</span>
+                <span className={isFullscreen ? 'hidden sm:inline' : ''}>Away Team</span>
+                <span className={isFullscreen ? 'inline sm:hidden' : 'hidden'}>Away</span>
               </button>
             )}
           </div>
@@ -1224,11 +1245,12 @@ const PitchComponent: React.FC<PitchProps> = ({
           title="Toggle Pitch Tactical Zones (5 Channels / 18 Grid Zones / Off)"
         >
           <Grid3X3 className={`w-3.5 h-3.5 shrink-0 ${zoneMode !== 'off' ? 'text-slate-950' : isLight ? 'text-teal-600' : 'text-teal-400'}`} />
-          <span>
+          <span className={isFullscreen ? 'hidden sm:inline' : ''}>
             {zoneMode === 'off' && 'Zones'}
             {zoneMode === '5-channels' && 'Zones: 5 Channels'}
             {zoneMode === '18-zones' && 'Zones: 18 (Zone 14)'}
           </span>
+          <span className={isFullscreen ? 'inline sm:hidden' : 'hidden'}>Zones</span>
         </button>
 
         {/* Reset Button */}
@@ -1264,7 +1286,8 @@ const PitchComponent: React.FC<PitchProps> = ({
               <>
                 <Minimize2 className="w-3.5 h-3.5 text-slate-950 shrink-0" />
                 <span className="font-mono text-[11px] font-black">&lt;&gt;</span>
-                <span>Exit Fullscreen</span>
+                <span className="hidden sm:inline">Exit Fullscreen</span>
+                <span className="inline sm:hidden">Exit</span>
               </>
             ) : (
               <>
@@ -1323,11 +1346,11 @@ const PitchComponent: React.FC<PitchProps> = ({
         </div>
       )}
 
-      {/* Main Pitch Container Area (Flex Row in Fullscreen to place tools vertically on the left) */}
-      <div className={`w-full flex ${isFullscreen ? 'flex-row items-center justify-center gap-2 sm:gap-3 flex-1 min-h-0 min-w-0 relative overflow-hidden py-0.5' : 'flex-col items-center'}`}>
-        {/* Left Side Vertical Drawing Toolbar (In Fullscreen Mode - always shown normally) */}
+      {/* Main Pitch Container Area (Flex-col on mobile, Flex-row on md+ screens in Fullscreen) */}
+      <div className={`w-full flex ${isFullscreen ? 'flex-col md:flex-row items-center justify-center gap-1 sm:gap-3 flex-1 min-h-0 min-w-0 relative overflow-hidden py-0.5' : 'flex-col items-center'}`}>
+        {/* Left Side Vertical Drawing Toolbar (In Fullscreen Mode - ONLY on tablet/desktop md: and up) */}
         {isFullscreen && (
-          <div className="h-full flex items-center justify-center shrink-0 z-40 animate-in fade-in slide-in-from-left-3 duration-200">
+          <div className="hidden md:flex h-full items-center justify-center shrink-0 z-40 animate-in fade-in slide-in-from-left-3 duration-200">
             <DrawingToolbar
               activeTool={activeTool}
               onSelectTool={setActiveTool}
@@ -1344,6 +1367,190 @@ const PitchComponent: React.FC<PitchProps> = ({
               onClearAll={handleClearAllDrawings}
               isFullscreen={true}
             />
+          </div>
+        )}
+
+        {/* Mobile Fullscreen Floating Tactical Toolbar (Only on mobile devices when Tools are active) */}
+        {isFullscreen && isDrawingMode && (
+          <div className="md:hidden absolute bottom-2 left-2 right-2 z-50 animate-in slide-in-from-bottom-2 duration-200">
+            <div className={`w-full flex flex-col p-2 rounded-2xl border shadow-2xl backdrop-blur-xl gap-2 ${
+              isLight ? 'bg-white/95 border-slate-300 text-slate-900 shadow-slate-900/30' : 'bg-neutral-950/95 border-neutral-800 text-white shadow-black/90'
+            }`}>
+              {/* Header row with Title, Undo, Redo, Clear & Close */}
+              <div className="flex items-center justify-between pb-1 border-b border-neutral-700/50">
+                <div className="flex items-center gap-1.5 font-black text-xs">
+                  <Pencil className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Tactical Tools</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleUndo}
+                    disabled={drawingHistory.length === 0}
+                    className="p-1 rounded text-neutral-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                    title="Undo"
+                  >
+                    <Undo2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRedo}
+                    disabled={redoStack.length === 0}
+                    className="p-1 rounded text-neutral-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                    title="Redo"
+                  >
+                    <Redo2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearAllDrawings}
+                    className="p-1 rounded text-rose-400 hover:text-rose-300 cursor-pointer"
+                    title="Clear all drawings"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onToggleDrawingMode}
+                    className="p-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 cursor-pointer ml-1"
+                    title="Hide Tools"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Row 1: Tactical Tools horizontal scrolling buttons */}
+              <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
+                <button
+                  type="button"
+                  onClick={() => setActiveTool('hand')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 cursor-pointer ${
+                    activeTool === 'hand' ? 'bg-amber-400 text-slate-950 font-black shadow-sm' : 'bg-neutral-800 text-neutral-300'
+                  }`}
+                >
+                  <Hand className="w-3.5 h-3.5" />
+                  <span>Hand</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTool('arrow_solid')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 cursor-pointer ${
+                    activeTool === 'arrow_solid' ? 'bg-amber-400 text-slate-950 font-black shadow-sm' : 'bg-neutral-800 text-neutral-300'
+                  }`}
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                  <span>Arrow</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTool('arrow_dashed')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 cursor-pointer ${
+                    activeTool === 'arrow_dashed' ? 'bg-amber-400 text-slate-950 font-black shadow-sm' : 'bg-neutral-800 text-neutral-300'
+                  }`}
+                >
+                  <MoveUpRight className="w-3.5 h-3.5" />
+                  <span>Dashed</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTool('arrow_curved')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 cursor-pointer ${
+                    activeTool === 'arrow_curved' ? 'bg-amber-400 text-slate-950 font-black shadow-sm' : 'bg-neutral-800 text-neutral-300'
+                  }`}
+                >
+                  <CornerUpRight className="w-3.5 h-3.5" />
+                  <span>Curved</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTool('pen')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 cursor-pointer ${
+                    activeTool === 'pen' ? 'bg-amber-400 text-slate-950 font-black shadow-sm' : 'bg-neutral-800 text-neutral-300'
+                  }`}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Pen</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTool('line')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 cursor-pointer ${
+                    activeTool === 'line' ? 'bg-amber-400 text-slate-950 font-black shadow-sm' : 'bg-neutral-800 text-neutral-300'
+                  }`}
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                  <span>Line</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTool('rectangle')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 cursor-pointer ${
+                    activeTool === 'rectangle' ? 'bg-amber-400 text-slate-950 font-black shadow-sm' : 'bg-neutral-800 text-neutral-300'
+                  }`}
+                >
+                  <Square className="w-3.5 h-3.5" />
+                  <span>Zone</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTool('eraser')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1 cursor-pointer ${
+                    activeTool === 'eraser' ? 'bg-rose-500 text-white font-black shadow-sm' : 'bg-neutral-800 text-rose-400'
+                  }`}
+                >
+                  <Eraser className="w-3.5 h-3.5" />
+                  <span>Eraser</span>
+                </button>
+              </div>
+
+              {/* Row 2: Colors + Stroke thickness */}
+              <div className="flex items-center justify-between gap-2 pt-0.5">
+                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                  {TACTICAL_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => setActiveColor(c.value)}
+                      className={`w-5 h-5 rounded-full border transition cursor-pointer shrink-0 ${
+                        activeColor === c.value ? 'scale-125 ring-2 ring-amber-400 border-white shadow' : 'border-neutral-600 opacity-80'
+                      }`}
+                      style={{ backgroundColor: c.value }}
+                      title={c.name}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setStrokeWidth(2)}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer ${
+                      strokeWidth === 2 ? 'bg-amber-400 text-slate-950 font-black' : 'bg-neutral-800 text-neutral-300'
+                    }`}
+                  >
+                    Thin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStrokeWidth(4)}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer ${
+                      strokeWidth === 4 ? 'bg-amber-400 text-slate-950 font-black' : 'bg-neutral-800 text-neutral-300'
+                    }`}
+                  >
+                    Med
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStrokeWidth(6)}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer ${
+                      strokeWidth === 6 ? 'bg-amber-400 text-slate-950 font-black' : 'bg-neutral-800 text-neutral-300'
+                    }`}
+                  >
+                    Thick
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1364,7 +1571,7 @@ const PitchComponent: React.FC<PitchProps> = ({
             onAddElement={handleAddDrawingElement}
             onUpdateElement={handleUpdateDrawingElement}
             onRemoveElement={onRemoveArrow}
-            isDrawingMode={isFullscreen || isDrawingMode}
+            isDrawingMode={isEffectiveDrawingActive}
             activeTool={activeTool}
             activeColor={activeColor}
             strokeWidth={strokeWidth}
@@ -1375,7 +1582,7 @@ const PitchComponent: React.FC<PitchProps> = ({
           {/* Starting XI Players & Football positioned on Pitch Grid */}
           <div
             className={`absolute inset-0 ${
-              (isFullscreen || isDrawingMode) && activeTool !== 'hand' && activeTool !== 'select'
+              isEffectiveDrawingActive && activeTool !== 'hand' && activeTool !== 'select'
                 ? 'z-30 pointer-events-none'
                 : 'z-50 pointer-events-auto'
             }`}
