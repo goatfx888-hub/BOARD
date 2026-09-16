@@ -22,6 +22,31 @@ const PitchSVGComponent: React.FC<PitchSVGProps> = ({
   className = '',
   children,
 }) => {
+  // Check if viewing in mobile portrait mode (where 9:16 aspect is used)
+  const [isMobilePortrait, setIsMobilePortrait] = React.useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 640;
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobilePortrait(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // In 9:16 mobile portrait mode, the vertical SVG is rendered taller (height scale = (16/9)/(10/7) ≈ 1.244).
+  // Multiplying ry by (1 / 1.244) ≈ 0.8035 restores circles and arcs to 100% mathematically round shapes.
+  const isMobileScale = orientation === 'vertical' && isMobilePortrait;
+  const circleRy = isMobileScale ? 76 : 95;
+  const spotRy = isMobileScale ? 3.6 : 4.5;
+  const spotGlowRy = isMobileScale ? 7.2 : 9;
+  const cornerRy = isMobileScale ? 20 : 25;
+
   // Rich, realistic, world-class stadium turf base background
   const getPitchBackground = () => {
     switch (texture) {
@@ -747,22 +772,22 @@ const PitchSVGComponent: React.FC<PitchSVGProps> = ({
             <>
               <rect x="0" y="0" width="700" height="1000" fill="url(#grass-stripes-v)" opacity="0.5" />
               {/* Natural worn center/goal turf spots */}
-              <circle cx="350" cy="500" r="110" fill="rgba(161, 98, 7, 0.08)" />
-              <circle cx="350" cy="130" r="65" fill="rgba(161, 98, 7, 0.12)" />
-              <circle cx="350" cy="870" r="65" fill="rgba(161, 98, 7, 0.12)" />
+              <ellipse cx="350" cy="500" rx="110" ry={isMobileScale ? 88 : 110} fill="rgba(161, 98, 7, 0.08)" />
+              <ellipse cx="350" cy="130" rx="65" ry={isMobileScale ? 52 : 65} fill="rgba(161, 98, 7, 0.12)" />
+              <ellipse cx="350" cy="870" rx="65" ry={isMobileScale ? 52 : 65} fill="rgba(161, 98, 7, 0.12)" />
             </>
           )}
 
           {/* Goal Scuff Areas Vertical */}
           <g opacity={texture === 'tactical_dark' ? 0 : 0.35}>
             {/* Top Goalmouth Scuff */}
-            <ellipse cx="350" cy="65" rx="40" ry="14" fill="rgba(120, 53, 15, 0.20)" />
-            <circle cx="350" cy="160" r="8" fill="rgba(120, 53, 15, 0.14)" />
+            <ellipse cx="350" cy="65" rx="40" ry={isMobileScale ? 11 : 14} fill="rgba(120, 53, 15, 0.20)" />
+            <ellipse cx="350" cy="160" rx="8" ry={isMobileScale ? 6.4 : 8} fill="rgba(120, 53, 15, 0.14)" />
             {/* Bottom Goalmouth Scuff */}
-            <ellipse cx="350" cy="935" rx="40" ry="14" fill="rgba(120, 53, 15, 0.20)" />
-            <circle cx="350" cy="840" r="8" fill="rgba(120, 53, 15, 0.14)" />
+            <ellipse cx="350" cy="935" rx="40" ry={isMobileScale ? 11 : 14} fill="rgba(120, 53, 15, 0.20)" />
+            <ellipse cx="350" cy="840" rx="8" ry={isMobileScale ? 6.4 : 8} fill="rgba(120, 53, 15, 0.14)" />
             {/* Center Spot Scuff */}
-            <circle cx="350" cy="500" r="7" fill="rgba(120, 53, 15, 0.10)" />
+            <ellipse cx="350" cy="500" rx="7" ry={isMobileScale ? 5.6 : 7} fill="rgba(120, 53, 15, 0.10)" />
           </g>
 
           {/* Goal Structure Vertical (Top & Bottom Goals) */}
@@ -795,28 +820,28 @@ const PitchSVGComponent: React.FC<PitchSVGProps> = ({
             <line x1="50" y1="500" x2="650" y2="500" />
 
             {/* Center Circle */}
-            <circle cx="350" cy="500" r="95" />
-            <circle cx="350" cy="500" r="4.5" fill={lineStroke} />
+            <ellipse cx="350" cy="500" rx="95" ry={circleRy} />
+            <ellipse cx="350" cy="500" rx="4.5" ry={spotRy} fill={lineStroke} />
 
             {/* Top Penalty Area */}
             <rect x="175" y="50" width="350" height="165" />
             <rect x="260" y="50" width="180" height="55" />
-            <circle cx="350" cy="160" r="4.5" fill={lineStroke} />
-            <circle cx="350" cy="160" r="9" stroke={innerLineStroke} strokeWidth="1.2" />
-            <path d="M 285 215 A 95 95 0 0 0 415 215" />
+            <ellipse cx="350" cy="160" rx="4.5" ry={spotRy} fill={lineStroke} />
+            <ellipse cx="350" cy="160" rx="9" ry={spotGlowRy} stroke={innerLineStroke} strokeWidth="1.2" />
+            <path d={`M 285 215 A 95 ${circleRy} 0 0 0 415 215`} />
 
             {/* Bottom Penalty Area */}
             <rect x="175" y="785" width="350" height="165" />
             <rect x="260" y="895" width="180" height="55" />
-            <circle cx="350" cy="840" r="4.5" fill={lineStroke} />
-            <circle cx="350" cy="840" r="9" stroke={innerLineStroke} strokeWidth="1.2" />
-            <path d="M 285 785 A 95 95 0 0 1 415 785" />
+            <ellipse cx="350" cy="840" rx="4.5" ry={spotRy} fill={lineStroke} />
+            <ellipse cx="350" cy="840" rx="9" ry={spotGlowRy} stroke={innerLineStroke} strokeWidth="1.2" />
+            <path d={`M 285 785 A 95 ${circleRy} 0 0 1 415 785`} />
 
             {/* Corner Arcs */}
-            <path d="M 50 75 A 25 25 0 0 1 75 50" />
-            <path d="M 625 50 A 25 25 0 0 1 650 75" />
-            <path d="M 50 925 A 25 25 0 0 0 75 950" />
-            <path d="M 625 950 A 25 25 0 0 0 650 925" />
+            <path d={`M 50 75 A 25 ${cornerRy} 0 0 1 75 50`} />
+            <path d={`M 625 50 A 25 ${cornerRy} 0 0 1 650 75`} />
+            <path d={`M 50 925 A 25 ${cornerRy} 0 0 0 75 950`} />
+            <path d={`M 625 950 A 25 ${cornerRy} 0 0 0 650 925`} />
 
             {/* Corner Tick Marks */}
             <line x1="46" y1="141" x2="50" y2="141" stroke={lineStroke} strokeWidth="2.5" />

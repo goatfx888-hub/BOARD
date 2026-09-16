@@ -661,7 +661,7 @@ export default function App() {
           />
 
           {/* Main Pitch & Tactical Board Area */}
-          <main className="flex-1 w-full max-w-[1700px] mx-auto px-3 sm:px-6 md:px-8 py-3 sm:py-5 flex flex-col gap-4 relative isolate z-10">
+          <main className="flex-1 w-full max-w-[1700px] mx-auto px-1.5 sm:px-6 md:px-8 py-2 sm:py-5 flex flex-col gap-3 sm:gap-4 relative isolate z-10">
             
             {/* Mobile View Selector Bar (visible on screens under lg breakpoint) */}
             <div className={`lg:hidden w-full flex items-center justify-between p-1.5 rounded-2xl border text-xs shadow-lg backdrop-blur-md ${

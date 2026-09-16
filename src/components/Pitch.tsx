@@ -1174,12 +1174,14 @@ const PitchComponent: React.FC<PitchProps> = ({
     }
   };
 
-  const containerAspect = orientation === 'horizontal' ? 'aspect-[10/7] w-full' : 'aspect-[7/10] w-full';
+  const containerAspect = orientation === 'horizontal'
+    ? 'aspect-[10/7] w-full'
+    : 'aspect-[9/16] sm:aspect-[7/10] w-full';
 
   // Responsive container sizing: tailored for regular and friendly fullscreen laptop/mobile view
   const pitchWidthClass = isFullscreen
     ? 'w-full h-full max-h-screen mx-auto flex flex-col items-center justify-between overflow-hidden'
-    : (orientation === 'horizontal' ? 'max-w-4xl md:max-w-[780px] lg:max-w-[1020px] xl:max-w-[1060px]' : 'max-w-2xl md:max-w-[640px] lg:max-w-[720px] xl:max-w-[760px]');
+    : (orientation === 'horizontal' ? 'max-w-4xl md:max-w-[780px] lg:max-w-[1020px] xl:max-w-[1060px]' : 'w-full max-w-[460px] sm:max-w-2xl md:max-w-[640px] lg:max-w-[720px] xl:max-w-[760px]');
 
   const pitchAspectClass = isFullscreen
     ? (orientation === 'horizontal'
