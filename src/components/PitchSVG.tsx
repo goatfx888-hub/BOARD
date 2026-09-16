@@ -64,12 +64,12 @@ const PitchSVGComponent: React.FC<PitchSVGProps> = ({
 
   return (
     <div
-      className={`relative w-full h-full rounded-2xl overflow-hidden border border-emerald-950/80 shadow-[0_25px_60px_rgba(0,0,0,0.85)] transition-all duration-300 touch-none select-none ${getPitchBackground()} ${className}`}
+      className={`relative w-full h-full rounded-2xl overflow-hidden border border-emerald-950/80 shadow-[0_25px_60px_rgba(0,0,0,0.85)] transition-all duration-300 select-none ${getPitchBackground()} ${className}`}
     >
       {/* SVG Canvas for High-Precision Pitch Graphics */}
       {orientation === 'horizontal' ? (
         <svg
-          className="absolute inset-0 w-full h-full select-none touch-none"
+          className="absolute inset-0 w-full h-full select-none pointer-events-none"
           viewBox="0 0 1000 700"
           preserveAspectRatio="none"
         >
@@ -500,7 +500,7 @@ const PitchSVGComponent: React.FC<PitchSVGProps> = ({
       ) : (
         /* Vertical Pitch Rendering */
         <svg
-          className="absolute inset-0 w-full h-full select-none touch-none"
+          className="absolute inset-0 w-full h-full select-none pointer-events-none"
           viewBox="0 0 700 1000"
           preserveAspectRatio="none"
         >

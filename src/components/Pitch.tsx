@@ -277,11 +277,18 @@ const PitchComponent: React.FC<PitchProps> = ({
   const isLight = theme === 'light';
   const pitchContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Prevent mobile browsers (iOS Safari, Android Chrome) from scrolling or rubber-banding
-  // when touching and dragging players, the ball, or tactical drawings
+  // When tools are active (pen, arrows, lines, zones, etc.) or when dragging a player/ball,
+  // prevent mobile browsers (iOS Safari, Android Chrome) from scrolling or rubber-banding.
+  // When tools are NOT active and nothing is being dragged, allow completely normal page scrolling.
+  const isInteractingRef = useRef(false);
+  const isEffectiveDrawingActiveRef = useRef(false);
+
   const onPitchTouchMove = useCallback((e: TouchEvent) => {
-    if (e.cancelable) {
-      e.preventDefault();
+    // Only block page scrolling if drawing tools are active or a player/ball is being actively dragged
+    if (isEffectiveDrawingActiveRef.current || isInteractingRef.current) {
+      if (e.cancelable) {
+        e.preventDefault();
+      }
     }
   }, []);
 
@@ -637,6 +644,8 @@ const PitchComponent: React.FC<PitchProps> = ({
     }
     e.stopPropagation();
 
+    isInteractingRef.current = true;
+
     const target = e.currentTarget;
     const pointerId = e.pointerId;
     try {
@@ -806,6 +815,7 @@ const PitchComponent: React.FC<PitchProps> = ({
         setIsDraggingBall(false);
       }
       setDraggingPlayerId(null);
+      isInteractingRef.current = false;
     };
 
     window.addEventListener('pointermove', handlePointerMove, { passive: false });
@@ -889,6 +899,7 @@ const PitchComponent: React.FC<PitchProps> = ({
     e.stopPropagation();
 
     setBallOwnerId(null);
+    isInteractingRef.current = true;
 
     const target = e.currentTarget;
     const pointerId = e.pointerId;
@@ -1030,6 +1041,7 @@ const PitchComponent: React.FC<PitchProps> = ({
           }
         );
       }
+      isInteractingRef.current = false;
     };
 
     window.addEventListener('pointermove', handlePointerMove, { passive: false });
@@ -1179,6 +1191,10 @@ const PitchComponent: React.FC<PitchProps> = ({
   const isEffectiveDrawingActive = isFullscreen
     ? (isDrawingMode || (typeof window !== 'undefined' && window.innerWidth >= 768))
     : isDrawingMode;
+
+  useEffect(() => {
+    isEffectiveDrawingActiveRef.current = isEffectiveDrawingActive;
+  }, [isEffectiveDrawingActive]);
 
   return (
     <div className={`relative w-full ${pitchWidthClass} mx-auto flex flex-col items-center select-none ${isFullscreen ? 'p-0.5 sm:p-1.5 gap-1 sm:gap-1.5 justify-between min-h-0' : 'py-1 gap-2'}`}>
@@ -1594,7 +1610,9 @@ const PitchComponent: React.FC<PitchProps> = ({
         <div
           ref={setPitchContainerRef}
           onClick={handlePitchClick}
-          className={`relative isolate overflow-hidden touch-none select-none ${pitchAspectClass} transition-transform duration-500 ease-out ${getPerspectiveTransform()}`}
+          className={`relative isolate overflow-hidden select-none ${
+            isEffectiveDrawingActive ? 'touch-none' : ''
+          } ${pitchAspectClass} transition-transform duration-500 ease-out ${getPerspectiveTransform()}`}
         >
         {/* Realistic Pitch Background SVG */}
         <PitchSVG texture={texture} lighting={lighting} orientation={orientation} showCornerFlags showGoals>
@@ -1617,9 +1635,11 @@ const PitchComponent: React.FC<PitchProps> = ({
 
           {/* Starting XI Players & Football positioned on Pitch Grid */}
           <div
-            className={`absolute inset-0 touch-none select-none ${
-              isEffectiveDrawingActive && activeTool !== 'hand' && activeTool !== 'select'
-                ? 'z-30 pointer-events-none'
+            className={`absolute inset-0 select-none ${
+              isEffectiveDrawingActive
+                ? activeTool !== 'hand' && activeTool !== 'select'
+                  ? 'z-30 pointer-events-none touch-none'
+                  : 'z-50 pointer-events-auto touch-none'
                 : 'z-50 pointer-events-auto'
             }`}
           >

@@ -492,12 +492,12 @@ const DrawingOverlayComponent: React.FC<DrawingOverlayProps> = ({
   const selectedElem = activeElements.find((e) => e.id === selectedId);
 
   return (
-    <div className="absolute inset-0 w-full h-full pointer-events-none touch-none select-none">
+    <div className={`absolute inset-0 w-full h-full pointer-events-none select-none ${isDrawingMode && !isPointerHand ? 'touch-none' : ''}`}>
       <svg
         ref={svgRef}
-        className={`absolute inset-0 w-full h-full touch-none select-none ${
+        className={`absolute inset-0 w-full h-full select-none ${
           isDrawingMode && !isPointerHand
-            ? 'z-40 pointer-events-auto ' +
+            ? 'z-40 pointer-events-auto touch-none ' +
               (currentTool === 'eraser'
                 ? 'cursor-pointer'
                 : 'cursor-crosshair')
