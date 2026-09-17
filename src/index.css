@@ -119,19 +119,4 @@
   background: #404040;
 }
 
-/* Fullscreen Mode Safe-Area & Dynamic Viewport Height (dvh) for iPhone/iOS */
-.fullscreen-safe-container {
-  height: 100vh;
-  height: 100dvh;
-  padding-top: max(4px, env(safe-area-inset-top, 4px));
-  padding-bottom: max(6px, env(safe-area-inset-bottom, 6px));
-  padding-left: max(4px, env(safe-area-inset-left, 4px));
-  padding-right: max(4px, env(safe-area-inset-right, 4px));
-}
-
-.fullscreen-ios-pitch {
-  height: 100%;
-  max-height: 100%;
-  width: auto;
-}
 

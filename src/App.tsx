@@ -568,7 +568,7 @@ export default function App() {
         />
       ) : isFullscreen ? (
         /* Fullscreen Board View Mode (Hides all other tools and page chrome on ALL devices) */
-        <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-between overflow-hidden select-none animate-in fade-in duration-200 fullscreen-safe-container ${
+        <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-between p-1 sm:p-2 overflow-hidden select-none animate-in fade-in duration-200 ${
           isLight ? 'bg-slate-100' : 'bg-black'
         }`}>
           {/* Quick Exit Fullscreen button floating top right for instant touch exit on phones & tablets */}
