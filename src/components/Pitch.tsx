@@ -1180,13 +1180,13 @@ const PitchComponent: React.FC<PitchProps> = ({
 
   // Responsive container sizing: tailored for regular and friendly fullscreen laptop/mobile view
   const pitchWidthClass = isFullscreen
-    ? 'w-full h-full max-h-screen mx-auto flex flex-col items-center justify-between overflow-hidden'
+    ? 'w-full h-full max-h-full mx-auto flex flex-col items-center justify-between overflow-hidden'
     : (orientation === 'horizontal' ? 'max-w-4xl md:max-w-[780px] lg:max-w-[1020px] xl:max-w-[1060px]' : 'w-full max-w-[460px] sm:max-w-2xl md:max-w-[640px] lg:max-w-[720px] xl:max-w-[760px]');
 
   const pitchAspectClass = isFullscreen
     ? (orientation === 'horizontal'
         ? 'h-full max-h-full max-w-full aspect-[10/7] flex items-center justify-center'
-        : 'h-full max-h-full w-full max-w-full aspect-[9/16] md:aspect-[7/10] flex items-center justify-center')
+        : 'h-full max-h-full w-auto max-w-full aspect-[9/16] md:aspect-[7/10] flex items-center justify-center')
     : `w-full ${containerAspect}`;
 
   // In fullscreen mode on desktop (md+ screens), drawing can stay always ready; on mobile, it follows whether Tools are open
@@ -1614,7 +1614,7 @@ const PitchComponent: React.FC<PitchProps> = ({
           onClick={handlePitchClick}
           className={`relative isolate overflow-hidden select-none ${
             isEffectiveDrawingActive ? 'touch-none' : ''
-          } ${pitchAspectClass} transition-transform duration-500 ease-out ${getPerspectiveTransform()}`}
+          } ${pitchAspectClass} ${isFullscreen ? 'h-full max-h-full' : ''} transition-transform duration-500 ease-out ${getPerspectiveTransform()}`}
         >
         {/* Realistic Pitch Background SVG */}
         <PitchSVG texture={texture} lighting={lighting} orientation={orientation} showCornerFlags showGoals>
