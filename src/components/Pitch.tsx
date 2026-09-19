@@ -1199,7 +1199,7 @@ const PitchComponent: React.FC<PitchProps> = ({
   }, [isEffectiveDrawingActive]);
 
   return (
-    <div className={`relative w-full ${pitchWidthClass} mx-auto flex flex-col items-center select-none ${isFullscreen ? 'p-0.5 sm:p-1.5 gap-1 sm:gap-1.5 justify-between min-h-0' : 'py-1 gap-2'}`}>
+    <div className={`relative w-full ${pitchWidthClass} ${isFullscreen ? 'ios-fs-pitch-container' : ''} mx-auto flex flex-col items-center select-none ${isFullscreen ? 'p-0.5 sm:p-1.5 gap-1 sm:gap-1.5 justify-between min-h-0' : 'py-1 gap-2'}`}>
       {/* Mobile / iPhone Fullscreen Header (2-row layout exactly matching user reference screenshot) */}
       {isFullscreen && (
         <div className="flex sm:hidden w-full max-w-sm mx-auto flex-col items-center gap-1.5 p-1.5 rounded-2xl bg-neutral-900/95 border border-neutral-800 shadow-xl backdrop-blur-md shrink-0 z-30">
@@ -1730,7 +1730,7 @@ const PitchComponent: React.FC<PitchProps> = ({
           onClick={handlePitchClick}
           className={`relative isolate overflow-hidden select-none ${
             isEffectiveDrawingActive ? 'touch-none' : ''
-          } ${pitchAspectClass} transition-transform duration-500 ease-out ${getPerspectiveTransform()}`}
+          } ${pitchAspectClass} ${isFullscreen ? 'ios-fs-pitch-stage' : ''} transition-transform duration-500 ease-out ${getPerspectiveTransform()}`}
         >
         {/* Realistic Pitch Background SVG */}
         <PitchSVG texture={texture} lighting={lighting} orientation={orientation} showCornerFlags showGoals>
@@ -2064,8 +2064,8 @@ const PitchComponent: React.FC<PitchProps> = ({
       </div>
     </div>
 
-    {/* Keyframes Recorded Studio & Timeline (Spacious in normal, sleek compact bar in fullscreen desktop/tablet, hidden in mobile fullscreen) */}
-    <div className={`w-full justify-center shrink-0 z-30 ${isFullscreen ? 'hidden sm:flex max-w-4xl px-1 sm:px-2' : 'flex'}`}>
+    {/* Keyframes Recorded Studio & Timeline (Spacious in normal, sleek compact bar in fullscreen desktop/tablet, styled compactly in iOS mobile fullscreen) */}
+    <div className={`w-full justify-center shrink-0 z-30 ${isFullscreen ? 'hidden sm:flex ios-fs-playback max-w-4xl px-1 sm:px-2' : 'flex'}`}>
       <KeyframesRecordedStudio
         status={animatorState.status}
         playbackMode={animatorState.playbackMode}
