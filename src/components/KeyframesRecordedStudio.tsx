@@ -94,6 +94,9 @@ interface KeyframesRecordedStudioProps {
   awaySquad?: SquadData | null;
   onPlay: () => void;
   onPlayUnit?: () => void;
+  onContinue?: () => void;
+  onContinueUnit?: () => void;
+  hasUnplayedSteps?: boolean;
   onResume?: () => void;
   onPause: () => void;
   onStop: () => void;
@@ -117,6 +120,9 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
   awaySquad,
   onPlay,
   onPlayUnit,
+  onContinue,
+  onContinueUnit,
+  hasUnplayedSteps = false,
   onResume,
   onPause,
   onStop,
@@ -192,19 +198,19 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
   // Compact layout for fullscreen mode
   if (isFullscreen) {
     return (
-      <div className={`w-full max-w-4xl backdrop-blur-xl rounded-2xl p-1.5 sm:p-2 shadow-2xl flex flex-col gap-1.5 border transition-all ${
+      <div className={`w-full max-w-4xl backdrop-blur-xl rounded-2xl p-2 sm:p-2.5 shadow-2xl flex flex-col gap-2 border transition-all ${
         isLight ? 'bg-white/95 border-slate-200 shadow-slate-300/60' : 'bg-black/95 border-neutral-800 shadow-black'
       }`}>
-        <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1.5 sm:gap-2 text-xs">
-          {/* Main Controls + Speed Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
-            {/* Primary Action Buttons (Grid 2-cols on mobile, flex on desktop) */}
-            <div className="grid grid-cols-2 gap-1.5 w-full sm:w-auto sm:flex sm:items-center">
+        <div className="w-full flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2 text-xs">
+          {/* Main Controls + Step & Speed Controls */}
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full lg:w-auto">
+            {/* Primary Action Buttons (2-col on mobile, 4-col on tablet, inline on desktop) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center gap-1.5 w-full sm:w-auto">
               {status === 'paused' ? (
                 <>
                   <button
                     onClick={onResume || onPlay}
-                    className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/30 ring-2 ring-emerald-400/50 transition active:scale-95 cursor-pointer whitespace-nowrap"
+                    className="w-full lg:w-auto flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/30 ring-2 ring-emerald-400/50 transition active:scale-95 cursor-pointer whitespace-nowrap"
                     title="Resume Tactic from current position"
                   >
                     <Play className="w-3.5 h-3.5 fill-current stroke-[2.5]" />
@@ -212,7 +218,7 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                   </button>
                   <button
                     onClick={onPlay}
-                    className={`w-full sm:w-auto flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-xl border transition active:scale-95 cursor-pointer whitespace-nowrap ${
+                    className={`w-full lg:w-auto flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-xl border transition active:scale-95 cursor-pointer whitespace-nowrap ${
                       isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200' : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
                     }`}
                     title="Restart from Start (3s Timer)"
@@ -223,6 +229,40 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                 </>
               ) : (
                 <>
+                  {/* Continue Sequential Button */}
+                  <button
+                    onClick={onContinue || onPlay}
+                    disabled={totalSteps === 0}
+                    className={`w-full lg:w-auto flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs transition active:scale-95 shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                      hasUnplayedSteps
+                        ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/30 ring-2 ring-emerald-400/60 animate-pulse'
+                        : isLight
+                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                        : 'bg-neutral-900 hover:bg-neutral-800 text-emerald-400 border border-neutral-700'
+                    }`}
+                    title="Continue tactic step-by-step from where the move stopped"
+                  >
+                    <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Continue</span>
+                  </button>
+
+                  {/* Continue as Unit Button */}
+                  <button
+                    onClick={onContinueUnit || onPlayUnit}
+                    disabled={totalSteps === 0}
+                    className={`w-full lg:w-auto flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs transition active:scale-95 shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                      hasUnplayedSteps
+                        ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sky-500/30 ring-2 ring-sky-400/60 animate-pulse'
+                        : isLight
+                        ? 'bg-slate-100 hover:bg-slate-200 text-sky-800 border-slate-300'
+                        : 'bg-neutral-900 hover:bg-neutral-800 text-sky-400 border border-neutral-700'
+                    }`}
+                    title="Continue tactic moving all players simultaneously as a unit from current position"
+                  >
+                    <Users className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Continue Unit</span>
+                  </button>
+
                   <button
                     onClick={() => {
                       if (isPlaying && playbackMode === 'sequential') {
@@ -232,31 +272,24 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                       }
                     }}
                     disabled={totalSteps === 0}
-                    className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-xs transition active:scale-95 shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                    className={`w-full lg:w-auto flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs transition active:scale-95 border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
                       isPlaying && playbackMode === 'sequential'
                         ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30 ring-2 ring-amber-400/50'
-                        : totalSteps > 0
-                        ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/30 ring-2 ring-emerald-400/50'
                         : isLight
-                        ? 'bg-slate-200 text-slate-500'
-                        : 'bg-neutral-800 text-neutral-400'
+                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                        : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
                     }`}
-                    title={totalSteps === 0 ? "Drag players or ball on the pitch to record keyframes first" : isPlaying && playbackMode === 'sequential' ? "Pause Playback" : "Play Tactic"}
+                    title={totalSteps === 0 ? "Drag players or ball on the pitch to record keyframes first" : "Play entire tactic from the start (3s Countdown)"}
                   >
                     {isPlaying && playbackMode === 'sequential' ? (
                       <>
                         <Pause className="w-3.5 h-3.5 fill-current stroke-[2.5]" />
                         <span>Pause</span>
                       </>
-                    ) : status === 'completed' && playbackMode === 'sequential' ? (
-                      <>
-                        <RotateCcw className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>Replay</span>
-                      </>
                     ) : (
                       <>
                         <Play className="w-3.5 h-3.5 fill-current stroke-[2.5]" />
-                        <span>Play Tactic</span>
+                        <span>Play All</span>
                       </>
                     )}
                   </button>
@@ -271,21 +304,17 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                       }
                     }}
                     disabled={totalSteps === 0}
-                    className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-xs transition active:scale-95 shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                    className={`w-full lg:w-auto flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs transition active:scale-95 border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
                       isPlaying && playbackMode === 'unit'
                         ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30 ring-2 ring-amber-400/50'
-                        : totalSteps > 0
-                        ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sky-500/30 ring-2 ring-sky-400/50'
                         : isLight
-                        ? 'bg-slate-200 text-slate-500'
-                        : 'bg-neutral-800 text-neutral-400'
+                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                        : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
                     }`}
                     title={
                       totalSteps === 0
                         ? "Drag players or ball on the pitch to record positions first"
-                        : isPlaying && playbackMode === 'unit'
-                        ? "Pause Unit Playback"
-                        : "Move all positioned players simultaneously as one unit"
+                        : "Play entire tactic as a synchronized unit from the start (3s Countdown)"
                     }
                   >
                     {isPlaying && playbackMode === 'unit' ? (
@@ -293,15 +322,10 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                         <Pause className="w-3.5 h-3.5 fill-current stroke-[2.5]" />
                         <span>Pause Unit</span>
                       </>
-                    ) : status === 'completed' && playbackMode === 'unit' ? (
-                      <>
-                        <RotateCcw className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>Replay Unit</span>
-                      </>
                     ) : (
                       <>
                         <Users className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>Move as Unit</span>
+                        <span>Unit All</span>
                       </>
                     )}
                   </button>
@@ -310,7 +334,7 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
             </div>
 
             {/* Secondary step & speed controls */}
-            <div className="flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 w-full sm:w-auto">
+            <div className="flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 w-full sm:w-auto shrink-0">
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => onSeekStep(Math.max(0, currentStepIndex - 1))}
@@ -337,13 +361,14 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                 <button
                   onClick={onStop}
                   disabled={totalSteps === 0}
-                  className={`flex items-center gap-1 px-2 py-1.5 rounded-xl border text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer ${
+                  className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl border text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer whitespace-nowrap ${
                     isLight ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300' : 'bg-neutral-900 hover:bg-neutral-800 text-amber-300 border-neutral-800'
                   }`}
                   title="Reset to Step 0"
                 >
-                  <RotateCcw className="w-3 h-3" />
-                  <span className="hidden xs:inline">Reset</span>
+                  <RotateCcw className="w-3 h-3 text-amber-400" />
+                  <span className="hidden sm:inline">Reset Start</span>
+                  <span className="inline sm:hidden">Reset</span>
                 </button>
               </div>
 
@@ -351,7 +376,7 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
               <div className={`flex items-center p-0.5 sm:p-1 rounded-xl border gap-0.5 ${
                 isLight ? 'bg-slate-100 border-slate-300' : 'bg-neutral-900 border-neutral-800'
               }`} title="Control Tactic Animation Speed">
-                <SpeedGaugeSvg className={`w-3.5 h-3.5 ml-1 mr-0.5 shrink-0 ${isLight ? 'text-slate-500' : 'text-neutral-400'}`} />
+                <SpeedGaugeSvg className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ml-0.5 sm:ml-1 mr-0.5 shrink-0 ${isLight ? 'text-slate-500' : 'text-neutral-400'}`} />
                 {[0.5, 1.0, 1.5, 2.0].map((spd) => (
                   <button
                     key={spd}
@@ -487,17 +512,17 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
       </div>
 
       {/* Main Playback Control Bar */}
-      <div className={`w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 p-2 sm:p-3 rounded-2xl border shadow-sm ${subPanelBg}`}>
+      <div className={`w-full flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2.5 sm:gap-3 p-2.5 sm:p-3 md:p-3.5 rounded-2xl border shadow-sm ${subPanelBg}`}>
         {/* Playback Triggers & Step Controls */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
-          {/* Primary Action Buttons (2-column grid on mobile so both buttons fit side-by-side with 50% width without squishing or overflowing) */}
-          <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full xl:w-auto">
+          {/* Primary Action Buttons (2-col grid on mobile, 4-col on tablets, inline flex on desktop) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 xl:flex xl:items-center gap-2 w-full sm:w-auto">
             {status === 'paused' ? (
               <>
                 {/* Dedicated Resume Button */}
                 <button
                   onClick={onResume || onPlay}
-                  className="w-full sm:w-auto flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 sm:py-2 rounded-xl font-black text-xs sm:text-sm bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/60 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="w-full xl:w-auto flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-2.5 sm:py-2 rounded-xl font-black text-xs sm:text-sm bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/60 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                   title="Resume playback from current paused position"
                 >
                   <Play className="w-4 h-4 fill-current stroke-[2.5]" />
@@ -507,7 +532,7 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                 {/* Restart from beginning with 3s timer */}
                 <button
                   onClick={onPlay}
-                  className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm border transition-all active:scale-95 cursor-pointer whitespace-nowrap ${
+                  className={`w-full xl:w-auto flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm border transition-all active:scale-95 cursor-pointer whitespace-nowrap ${
                     isLight
                       ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
                       : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-700'
@@ -520,7 +545,41 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
               </>
             ) : (
               <>
-                {/* Play Tactic Button (Sequential Playback - Existing behavior untouched) */}
+                {/* Continue Sequential Button */}
+                <button
+                  onClick={onContinue || onPlay}
+                  disabled={totalSteps === 0}
+                  className={`w-full xl:w-auto flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 md:px-4 py-2.5 sm:py-2 rounded-xl font-black text-xs sm:text-sm transition-all active:scale-95 shadow-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                    hasUnplayedSteps
+                      ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/30 ring-2 ring-emerald-400/60 animate-pulse'
+                      : isLight
+                      ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : 'bg-neutral-900 hover:bg-neutral-800 text-emerald-400 border border-emerald-500/40'
+                  }`}
+                  title="Continue tactic step-by-step from where the move stopped"
+                >
+                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                  <span>Continue</span>
+                </button>
+
+                {/* Continue as Unit Button */}
+                <button
+                  onClick={onContinueUnit || onPlayUnit}
+                  disabled={totalSteps === 0}
+                  className={`w-full xl:w-auto flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 md:px-4 py-2.5 sm:py-2 rounded-xl font-black text-xs sm:text-sm transition-all active:scale-95 shadow-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                    hasUnplayedSteps
+                      ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sky-500/30 ring-2 ring-sky-400/60 animate-pulse'
+                      : isLight
+                      ? 'bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300'
+                      : 'bg-neutral-900 hover:bg-neutral-800 text-sky-400 border border-sky-500/40'
+                  }`}
+                  title="Continue tactic moving all players simultaneously as a unit from current position"
+                >
+                  <Users className="w-4 h-4 stroke-[2.5]" />
+                  <span>Continue Unit</span>
+                </button>
+
+                {/* Play Tactic Button (Full Sequence from Beginning) */}
                 <button
                   onClick={() => {
                     if (isPlaying && playbackMode === 'sequential') {
@@ -530,36 +589,29 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                     }
                   }}
                   disabled={totalSteps === 0}
-                  className={`w-full sm:w-auto flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-5 py-2.5 sm:py-2 rounded-xl font-black text-xs sm:text-sm transition-all active:scale-95 shadow-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                  className={`w-full xl:w-auto flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 md:px-4 py-2.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95 border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
                     isPlaying && playbackMode === 'sequential'
                       ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30 ring-2 ring-amber-400/60'
-                      : totalSteps > 0
-                      ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/30 ring-2 ring-emerald-400/60'
                       : isLight
-                      ? 'bg-slate-200 text-slate-500'
-                      : 'bg-neutral-800 text-neutral-400 border border-neutral-700'
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                      : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-700'
                   }`}
-                  title={totalSteps === 0 ? "Drag players or ball on the pitch to record keyframes first" : isPlaying && playbackMode === 'sequential' ? "Pause Playback" : "Play Tactic"}
+                  title={totalSteps === 0 ? "Drag players or ball on the pitch to record keyframes first" : "Play entire tactic from the start (3s Countdown)"}
                 >
                   {isPlaying && playbackMode === 'sequential' ? (
                     <>
                       <Pause className="w-4 h-4 fill-current stroke-[2.5]" />
                       <span>Pause</span>
                     </>
-                  ) : status === 'completed' && playbackMode === 'sequential' ? (
-                    <>
-                      <RotateCcw className="w-4 h-4 stroke-[2.5]" />
-                      <span>Replay</span>
-                    </>
                   ) : (
                     <>
                       <Play className="w-4 h-4 fill-current stroke-[2.5]" />
-                      <span>Play Tactic</span>
+                      <span>Play All</span>
                     </>
                   )}
                 </button>
 
-                {/* Move as Unit Button (Simultaneous Unit Movement) */}
+                {/* Move as Unit Button (Full Unit Replay from Beginning) */}
                 <button
                   onClick={() => {
                     if (isPlaying && playbackMode === 'unit') {
@@ -569,21 +621,17 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                     }
                   }}
                   disabled={totalSteps === 0}
-                  className={`w-full sm:w-auto flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-5 py-2.5 sm:py-2 rounded-xl font-black text-xs sm:text-sm transition-all active:scale-95 shadow-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                  className={`w-full xl:w-auto flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 md:px-4 py-2.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95 border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
                     isPlaying && playbackMode === 'unit'
                       ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30 ring-2 ring-amber-400/60'
-                      : totalSteps > 0
-                      ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sky-500/30 ring-2 ring-sky-400/60'
                       : isLight
-                      ? 'bg-slate-200 text-slate-500'
-                      : 'bg-neutral-800 text-neutral-400 border border-neutral-700'
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                      : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-700'
                   }`}
                   title={
                     totalSteps === 0
                       ? "Drag players or ball on the pitch to record positions first"
-                      : isPlaying && playbackMode === 'unit'
-                      ? "Pause Unit Playback"
-                      : "Move all positioned players simultaneously as one unified unit"
+                      : "Play entire tactic as a synchronized unit from the start (3s Countdown)"
                   }
                 >
                   {isPlaying && playbackMode === 'unit' ? (
@@ -591,15 +639,10 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                       <Pause className="w-4 h-4 fill-current stroke-[2.5]" />
                       <span>Pause Unit</span>
                     </>
-                  ) : status === 'completed' && playbackMode === 'unit' ? (
-                    <>
-                      <RotateCcw className="w-4 h-4 stroke-[2.5]" />
-                      <span>Replay Unit</span>
-                    </>
                   ) : (
                     <>
                       <Users className="w-4 h-4 stroke-[2.5]" />
-                      <span>Move as Unit</span>
+                      <span>Unit All</span>
                     </>
                   )}
                 </button>
@@ -607,59 +650,60 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
             )}
           </div>
 
-          {/* Secondary Controls: On mobile, step navigation and speed selector sit together smoothly on the second row */}
-          <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 w-full sm:w-auto">
-            <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Secondary Controls: Step navigation and reset board */}
+          <div className="flex items-center justify-between sm:justify-start gap-1 sm:gap-2 w-full sm:w-auto shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2">
               {/* Step Backwards */}
               <button
                 onClick={() => onSeekStep(Math.max(0, currentStepIndex - 1))}
                 disabled={totalSteps === 0 || currentStepIndex === 0}
-                className={`p-2 rounded-xl border disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer ${
+                className={`p-1.5 sm:p-2 rounded-xl border disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer shrink-0 ${
                   isLight ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300' : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
                 }`}
                 title="Step Backwards"
               >
-                <SkipBack className="w-4 h-4" />
+                <SkipBack className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
 
               {/* Step Forwards */}
               <button
                 onClick={() => onSeekStep(Math.min(totalSteps - 1, currentStepIndex + 1))}
                 disabled={totalSteps === 0 || currentStepIndex >= totalSteps - 1}
-                className={`p-2 rounded-xl border disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer ${
+                className={`p-1.5 sm:p-2 rounded-xl border disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer shrink-0 ${
                   isLight ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300' : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
                 }`}
                 title="Step Forwards"
               >
-                <SkipForward className="w-4 h-4" />
+                <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
 
               {/* Reset Board to Initial Positions */}
               <button
                 onClick={onStop}
                 disabled={totalSteps === 0}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer border ${
+                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer border whitespace-nowrap shrink-0 ${
                   isLight
                     ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300'
                     : 'bg-neutral-900 hover:bg-neutral-800 text-amber-300 border-neutral-800 hover:border-amber-500/40'
                 }`}
                 title="Reset Board to Initial Step 0 Positions"
               >
-                <RotateCcw className={`w-3.5 h-3.5 ${isLight ? 'text-amber-700' : 'text-amber-400'}`} />
-                <span className="hidden xs:inline sm:inline">Reset Start</span>
+                <RotateCcw className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-amber-700' : 'text-amber-400'}`} />
+                <span className="hidden sm:inline">Reset Start</span>
+                <span className="inline sm:hidden">Reset</span>
               </button>
             </div>
 
-            {/* Speed Selector on Mobile */}
-            <div className="flex sm:hidden items-center p-0.5 rounded-xl border gap-0.5 ${
+            {/* Speed Selector on Mobile & Tablet */}
+            <div className={`flex xl:hidden items-center p-0.5 rounded-xl border gap-0.5 shrink-0 ${
               isLight ? 'bg-white border-slate-300 shadow-sm' : 'bg-neutral-950 border-neutral-800'
-            }">
-              <SpeedGaugeSvg className={`w-3.5 h-3.5 ml-1 mr-0.5 shrink-0 ${isLight ? 'text-slate-500' : 'text-neutral-400'}`} />
+            }`}>
+              <SpeedGaugeSvg className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ml-0.5 sm:ml-1 mr-0.5 shrink-0 ${isLight ? 'text-slate-500' : 'text-neutral-400'}`} />
               {[0.5, 1.0, 1.5, 2.0].map((spd) => (
                 <button
                   key={spd}
                   onClick={() => onChangeSpeed(spd)}
-                  className={`px-1.5 py-0.5 rounded-md text-[11px] font-bold font-mono transition cursor-pointer ${
+                  className={`px-1 sm:px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold font-mono transition cursor-pointer ${
                     playbackSpeed === spd
                       ? isLight
                         ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm font-black'
@@ -676,8 +720,8 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
           </div>
         </div>
 
-        {/* Desktop Speed Selector (Hidden on Mobile) */}
-        <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+        {/* Large Desktop Speed Selector */}
+        <div className="hidden xl:flex items-center gap-2.5 shrink-0">
           <div className={`flex items-center p-1 rounded-xl border gap-0.5 ${
             isLight ? 'bg-white border-slate-300 shadow-sm' : 'bg-neutral-950 border-neutral-800'
           }`}>

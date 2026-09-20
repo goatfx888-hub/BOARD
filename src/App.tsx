@@ -327,6 +327,45 @@ export default function App() {
     }));
   };
 
+  // --- Batch Update Player Pitch Positions (e.g. on tactic animation completion) ---
+  const handleBatchUpdatePitchPositions = useCallback(
+    (
+      homePositions: Record<string, { x: number; y: number }>,
+      awayPositions?: Record<string, { x: number; y: number }>
+    ) => {
+      const isVS = matchMode === 'home_vs_away';
+
+      setHomeSquad((prev) => {
+        let hasChanges = false;
+        const newXI = prev.startingXI.map((p) => {
+          const updated = homePositions[p.id];
+          if (!updated) return p;
+          hasChanges = true;
+          return isVS
+            ? { ...p, vsPitchX: updated.x, vsPitchY: updated.y }
+            : { ...p, pitchX: updated.x, pitchY: updated.y };
+        });
+        return hasChanges ? { ...prev, startingXI: newXI } : prev;
+      });
+
+      if (awayPositions && Object.keys(awayPositions).length > 0) {
+        setAwaySquad((prev) => {
+          let hasChanges = false;
+          const newXI = prev.startingXI.map((p) => {
+            const updated = awayPositions[p.id];
+            if (!updated) return p;
+            hasChanges = true;
+            return isVS
+              ? { ...p, vsPitchX: updated.x, vsPitchY: updated.y }
+              : { ...p, pitchX: updated.x, pitchY: updated.y };
+          });
+          return hasChanges ? { ...prev, startingXI: newXI } : prev;
+        });
+      }
+    },
+    [matchMode]
+  );
+
   // --- Save Edited Player Details ---
   const handleSavePlayer = (updatedPlayer: Player) => {
     setCurrentSquad((prev) => ({
@@ -606,6 +645,7 @@ export default function App() {
               }}
               onSwapPlayers={handleSwapPlayers}
               onUpdatePlayerPosition={handleUpdatePlayerPosition}
+              onBatchUpdatePositions={handleBatchUpdatePitchPositions}
               isDrawingMode={isDrawingMode}
               drawingType={drawingType}
               onAddArrow={handleAddArrow}
@@ -769,6 +809,7 @@ export default function App() {
                       }}
                       onSwapPlayers={handleSwapPlayers}
                       onUpdatePlayerPosition={handleUpdatePlayerPosition}
+                      onBatchUpdatePositions={handleBatchUpdatePitchPositions}
                       isDrawingMode={isDrawingMode}
                       drawingType={drawingType}
                       onAddArrow={handleAddArrow}

@@ -102,6 +102,10 @@ interface PitchProps {
   onSelectPlayer: (playerId: string, team?: 'home' | 'away') => void;
   onSwapPlayers: (player1Id: string, player2Id: string, team?: 'home' | 'away') => void;
   onUpdatePlayerPosition: (playerId: string, pitchX: number, pitchY: number, team?: 'home' | 'away') => void;
+  onBatchUpdatePositions?: (
+    homePositions: Record<string, { x: number; y: number }>,
+    awayPositions?: Record<string, { x: number; y: number }>
+  ) => void;
   isDrawingMode: boolean;
   drawingType: 'pass' | 'run' | 'dribble' | 'press';
   onAddArrow: (arrow: TacticalArrow) => void;
@@ -252,6 +256,7 @@ const PitchComponent: React.FC<PitchProps> = ({
   onSelectPlayer,
   onSwapPlayers,
   onUpdatePlayerPosition,
+  onBatchUpdatePositions,
   isDrawingMode,
   drawingType,
   onAddArrow,
@@ -505,9 +510,85 @@ const PitchComponent: React.FC<PitchProps> = ({
   useEffect(() => {
     const unsubscribe = animatorRef.current.subscribe((frame) => {
       setAnimatorState(frame);
+
+      if (frame.status === 'completed') {
+        // Automatically sync final animated coordinates into React Squad state
+        const homePositions: Record<string, { x: number; y: number }> = {};
+        const awayPositions: Record<string, { x: number; y: number }> = {};
+
+        squad.startingXI.forEach((p) => {
+          if (frame.positions[p.id]) {
+            homePositions[p.id] = { ...frame.positions[p.id] };
+          }
+        });
+
+        if (awaySquad) {
+          awaySquad.startingXI.forEach((p) => {
+            if (frame.positions[p.id]) {
+              awayPositions[p.id] = { ...frame.positions[p.id] };
+            }
+          });
+        }
+
+        if (onBatchUpdatePositions) {
+          onBatchUpdatePositions(homePositions, awayPositions);
+        } else {
+          Object.entries(homePositions).forEach(([id, pos]) => {
+            onUpdatePlayerPosition(id, pos.x, pos.y, 'home');
+          });
+          Object.entries(awayPositions).forEach(([id, pos]) => {
+            onUpdatePlayerPosition(id, pos.x, pos.y, 'away');
+          });
+        }
+
+        // Synchronize final ball position
+        const finalBall = frame.positions['ball'] || frame.ballPos;
+        if (finalBall) {
+          setBallPos({ ...finalBall });
+        }
+
+        // Determine ball ownership based on latest step or proximity
+        const steps = animatorRef.current.steps;
+        const lastStep = steps[steps.length - 1];
+        if (lastStep) {
+          if (lastStep.carriedBall || (lastStep.type === 'player' && lastStep.ballTo)) {
+            setBallOwnerId(lastStep.elementId);
+          } else {
+            // Find player closest to the ball
+            const targetB = finalBall || ballPos;
+            let closestId: string | null = null;
+            let closestDist = Infinity;
+            const allPlayers = [
+              ...squad.startingXI.map((p) => ({
+                id: p.id,
+                x: matchMode === 'home_vs_away' ? (p.vsPitchX ?? p.pitchX ?? 50) : (p.pitchX ?? 50),
+                y: matchMode === 'home_vs_away' ? (p.vsPitchY ?? p.pitchY ?? 50) : (p.pitchY ?? 50),
+              })),
+              ...(awaySquad
+                ? awaySquad.startingXI.map((p) => ({
+                    id: p.id,
+                    x: matchMode === 'home_vs_away' ? (p.vsPitchX ?? p.pitchX ?? 50) : (p.pitchX ?? 50),
+                    y: matchMode === 'home_vs_away' ? (p.vsPitchY ?? p.pitchY ?? 50) : (p.pitchY ?? 50),
+                  }))
+                : []),
+            ];
+            for (const p of allPlayers) {
+              const pPos = frame.positions[p.id] || p;
+              const d = Math.hypot(pPos.x - targetB.x, pPos.y - targetB.y);
+              if (d < 8.0 && d < closestDist) {
+                closestDist = d;
+                closestId = p.id;
+              }
+            }
+            if (closestId) {
+              setBallOwnerId(closestId);
+            }
+          }
+        }
+      }
     });
     return () => unsubscribe();
-  }, []);
+  }, [squad, awaySquad, matchMode, onBatchUpdatePositions, onUpdatePlayerPosition, ballPos]);
 
   // Playback Control Handlers
   const handlePlayTactic = () => {
@@ -520,6 +601,18 @@ const PitchComponent: React.FC<PitchProps> = ({
     setReceivingPlayerId(null);
     animatorRef.current.setSpeed(playbackSpeed);
     animatorRef.current.playUnit(true);
+  };
+
+  const handleContinueTactic = () => {
+    setReceivingPlayerId(null);
+    animatorRef.current.setSpeed(playbackSpeed);
+    animatorRef.current.continuePlayback('sequential');
+  };
+
+  const handleContinueUnitTactic = () => {
+    setReceivingPlayerId(null);
+    animatorRef.current.setSpeed(playbackSpeed);
+    animatorRef.current.continuePlayback('unit');
   };
 
   const handleResumeTactic = () => {
@@ -643,6 +736,16 @@ const PitchComponent: React.FC<PitchProps> = ({
       e.preventDefault();
     }
     e.stopPropagation();
+
+    // If an animation was running, paused, or completed, stop it so manual dragging has immediate full control
+    if (
+      animatorRef.current.status === 'playing' ||
+      animatorRef.current.status === 'countdown' ||
+      animatorRef.current.status === 'paused' ||
+      animatorRef.current.status === 'completed'
+    ) {
+      animatorRef.current.stop();
+    }
 
     isInteractingRef.current = true;
 
@@ -897,6 +1000,16 @@ const PitchComponent: React.FC<PitchProps> = ({
       e.preventDefault();
     }
     e.stopPropagation();
+
+    // If an animation was running, paused, or completed, stop it so manual ball dragging has immediate full control
+    if (
+      animatorRef.current.status === 'playing' ||
+      animatorRef.current.status === 'countdown' ||
+      animatorRef.current.status === 'paused' ||
+      animatorRef.current.status === 'completed'
+    ) {
+      animatorRef.current.stop();
+    }
 
     setBallOwnerId(null);
     isInteractingRef.current = true;
@@ -1765,12 +1878,12 @@ const PitchComponent: React.FC<PitchProps> = ({
             {(() => {
               const isAnimating =
                 animatorState.status === 'playing' ||
-                animatorState.status === 'paused' ||
-                animatorState.status === 'completed' ||
                 animatorState.status === 'countdown';
 
               const activeBallPos =
-                isAnimating && animatorState.positions['ball']
+                (isAnimating || animatorState.status === 'paused') &&
+                !isDraggingBall &&
+                animatorState.positions['ball']
                   ? animatorState.positions['ball']
                   : ballPos;
 
@@ -1789,7 +1902,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                       ? 'none'
                       : isPassing
                       ? 'left 0.38s cubic-bezier(0.16, 1, 0.3, 1), top 0.38s cubic-bezier(0.16, 1, 0.3, 1)'
-                      : 'left 0.45s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.45s cubic-bezier(0.2, 0.9, 0.3, 1)',
+                      : 'left 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.4s cubic-bezier(0.2, 0.9, 0.3, 1)',
                   }}
                   className="touch-none select-none cursor-grab active:cursor-grabbing group/ball"
                   title="Match Football (Click any player to pass, drag to move, double-click to reset)"
@@ -1920,12 +2033,12 @@ const PitchComponent: React.FC<PitchProps> = ({
             {squad.startingXI.map((player) => {
               const isAnimating =
                 animatorState.status === 'playing' ||
-                animatorState.status === 'paused' ||
-                animatorState.status === 'completed' ||
                 animatorState.status === 'countdown';
 
               const animatedPitchPos =
-                isAnimating && animatorState.positions[player.id]
+                (isAnimating || animatorState.status === 'paused') &&
+                draggingPlayerId !== player.id &&
+                animatorState.positions[player.id]
                   ? animatorState.positions[player.id]
                   : null;
 
@@ -1958,7 +2071,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                     willChange: isBeingDragged || isAnimating ? 'left, top' : 'left, top, opacity, transform',
                     transition: isBeingDragged || isAnimating
                       ? 'none'
-                      : 'left 0.45s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.45s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease-out, transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1)',
+                      : 'left 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease-out, transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1)',
                     zIndex: isBeingDragged ? 60 : selectedPlayerId === player.id || isReceiving ? 45 : isVisible ? 38 : 10,
                   }}
                   className={`player-card-token touch-none select-none cursor-grab active:cursor-grabbing relative ${
@@ -1988,12 +2101,12 @@ const PitchComponent: React.FC<PitchProps> = ({
               awaySquad.startingXI.map((player) => {
                 const isAnimating =
                   animatorState.status === 'playing' ||
-                  animatorState.status === 'paused' ||
-                  animatorState.status === 'completed' ||
                   animatorState.status === 'countdown';
 
                 const animatedPitchPos =
-                  isAnimating && animatorState.positions[player.id]
+                  (isAnimating || animatorState.status === 'paused') &&
+                  draggingPlayerId !== player.id &&
+                  animatorState.positions[player.id]
                     ? animatorState.positions[player.id]
                     : null;
 
@@ -2026,7 +2139,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                       willChange: isBeingDragged || isAnimating ? 'left, top' : 'left, top, opacity, transform',
                       transition: isBeingDragged || isAnimating
                         ? 'none'
-                        : 'left 0.45s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.45s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease-out, transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1)',
+                        : 'left 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease-out, transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1)',
                       zIndex: isBeingDragged ? 60 : selectedPlayerId === player.id || isReceiving ? 45 : isVisible ? 38 : 10,
                     }}
                     className={`player-card-token touch-none select-none cursor-grab active:cursor-grabbing relative ${
@@ -2077,6 +2190,9 @@ const PitchComponent: React.FC<PitchProps> = ({
         awaySquad={awaySquad}
         onPlay={handlePlayTactic}
         onPlayUnit={handlePlayUnitTactic}
+        onContinue={handleContinueTactic}
+        onContinueUnit={handleContinueUnitTactic}
+        hasUnplayedSteps={animatorState.hasUnplayedSteps}
         onResume={handleResumeTactic}
         onPause={handlePauseTactic}
         onStop={handleStopTactic}

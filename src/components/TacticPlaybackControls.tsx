@@ -10,6 +10,7 @@ import {
   Film,
   Sparkles,
   Users,
+  FastForward,
 } from 'lucide-react';
 import { PlaybackStatus, PlaybackMode, RecordedStep } from '../utils/tacticAnimator';
 import { useTheme } from '../context/ThemeContext';
@@ -23,6 +24,8 @@ interface TacticPlaybackControlsProps {
   steps: RecordedStep[];
   onPlay: () => void;
   onPlayUnit?: () => void;
+  onContinue?: () => void;
+  onContinueUnit?: () => void;
   onResume?: () => void;
   onPause: () => void;
   onStop: () => void;
@@ -42,6 +45,8 @@ export const TacticPlaybackControls: React.FC<TacticPlaybackControlsProps> = ({
   steps,
   onPlay,
   onPlayUnit,
+  onContinue,
+  onContinueUnit,
   onResume,
   onPause,
   onStop,
@@ -76,116 +81,87 @@ export const TacticPlaybackControls: React.FC<TacticPlaybackControlsProps> = ({
       {/* Top Row: Playback Action Bar */}
       <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3 text-xs">
         
-        {/* Left: Main Play / Pause Controls & Step Navigation */}
+        {/* Left: Main Play / Continue / Pause Controls & Step Navigation */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
-          {/* Action buttons (Grid 2 cols on mobile) */}
-          <div className="grid grid-cols-2 gap-1.5 w-full sm:w-auto sm:flex sm:items-center">
+          {/* Action buttons */}
+          <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
             {status === 'paused' ? (
               <>
-                {/* Dedicated Resume Button */}
+                {/* Dedicated Continue / Resume Button */}
                 <button
-                  onClick={onResume || onPlay}
-                  className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl font-black text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/30 ring-2 ring-emerald-400/50 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
-                  title="Resume Playback"
+                  onClick={onContinue || onResume || onPlay}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-xl font-black text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/30 ring-2 ring-emerald-400/50 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                  title="Continue Playback from where it stopped"
                 >
                   <Play className="w-4 h-4 fill-current stroke-[2.5]" />
-                  <span>Resume</span>
+                  <span>Continue</span>
                 </button>
 
                 {/* Restart Button */}
                 <button
                   onClick={onPlay}
-                  className={`w-full sm:w-auto flex items-center justify-center gap-1 px-3 py-2 sm:py-1.5 rounded-xl border transition cursor-pointer whitespace-nowrap ${btnBg}`}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-2 sm:py-1.5 rounded-xl border transition cursor-pointer whitespace-nowrap ${btnBg}`}
                   title="Play from Beginning with 3s Countdown"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Restart</span>
+                  <span>From Start</span>
                 </button>
               </>
+            ) : isPlaying ? (
+              /* Pause Button while playing */
+              <button
+                onClick={onPause}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 rounded-xl font-black text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30 ring-2 ring-amber-400/50 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                title="Pause Playback"
+              >
+                <Pause className="w-4 h-4 fill-current stroke-[2.5]" />
+                <span>Pause</span>
+              </button>
             ) : (
               <>
-                {/* Sequential Play Tactic (Original untouched) */}
+                {/* Continue Sequential Button */}
                 <button
-                  onClick={() => {
-                    if (isPlaying && playbackMode === 'sequential') {
-                      onPause();
-                    } else {
-                      onPlay();
-                    }
-                  }}
+                  onClick={onContinue || onPlay}
                   disabled={totalSteps === 0}
-                  className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl font-black text-xs transition-all active:scale-95 shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
-                    isPlaying && playbackMode === 'sequential'
-                      ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30 ring-2 ring-amber-400/50'
-                      : totalSteps > 0
-                      ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/30 ring-2 ring-emerald-400/50 animate-pulse'
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl font-black text-xs transition-all active:scale-95 shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                    totalSteps > 0
+                      ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/30 ring-2 ring-emerald-400/50'
                       : isLight
                       ? 'bg-slate-200 text-slate-500'
                       : 'bg-slate-800 text-slate-400'
                   }`}
-                  title={totalSteps === 0 ? "Drag players or ball on the pitch to record movements first" : isPlaying && playbackMode === 'sequential' ? "Pause Playback" : "Play Tactic"}
+                  title="Continue moving step-by-step from where players stopped"
                 >
-                  {isPlaying && playbackMode === 'sequential' ? (
-                    <>
-                      <Pause className="w-4 h-4 fill-current stroke-[2.5]" />
-                      <span>Pause</span>
-                    </>
-                  ) : status === 'completed' && playbackMode === 'sequential' ? (
-                    <>
-                      <RotateCcw className="w-4 h-4 stroke-[2.5]" />
-                      <span>Replay</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 fill-current stroke-[2.5]" />
-                      <span>Play Tactic</span>
-                    </>
-                  )}
+                  <FastForward className="w-4 h-4 fill-current stroke-[2.5]" />
+                  <span>Continue</span>
                 </button>
 
-                {/* Move as Unit Button (Simultaneous team unit animation) */}
+                {/* Continue Unit Button */}
                 <button
-                  onClick={() => {
-                    if (isPlaying && playbackMode === 'unit') {
-                      onPause();
-                    } else {
-                      onPlayUnit?.();
-                    }
-                  }}
+                  onClick={onContinueUnit || onPlayUnit}
                   disabled={totalSteps === 0}
-                  className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl font-black text-xs transition-all active:scale-95 shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
-                    isPlaying && playbackMode === 'unit'
-                      ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30 ring-2 ring-amber-400/50'
-                      : totalSteps > 0
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl font-black text-xs transition-all active:scale-95 shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                    totalSteps > 0
                       ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sky-500/30 ring-2 ring-sky-400/50'
                       : isLight
                       ? 'bg-slate-200 text-slate-500'
                       : 'bg-slate-800 text-slate-400'
                   }`}
-                  title={
-                    totalSteps === 0
-                      ? "Drag players or ball on the pitch to record movements first"
-                      : isPlaying && playbackMode === 'unit'
-                      ? "Pause Unit Playback"
-                      : "Move all positioned players simultaneously as one unit"
-                  }
+                  title="Continue moving all players simultaneously as a unit from current position"
                 >
-                  {isPlaying && playbackMode === 'unit' ? (
-                    <>
-                      <Pause className="w-4 h-4 fill-current stroke-[2.5]" />
-                      <span>Pause Unit</span>
-                    </>
-                  ) : status === 'completed' && playbackMode === 'unit' ? (
-                    <>
-                      <RotateCcw className="w-4 h-4 stroke-[2.5]" />
-                      <span>Replay Unit</span>
-                    </>
-                  ) : (
-                    <>
-                      <Users className="w-4 h-4 stroke-[2.5]" />
-                      <span>Move as Unit</span>
-                    </>
-                  )}
+                  <Users className="w-4 h-4 stroke-[2.5]" />
+                  <span>Continue Unit</span>
+                </button>
+
+                {/* Play Tactic / Play All (with countdown from start) */}
+                <button
+                  onClick={onPlay}
+                  disabled={totalSteps === 0}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl font-bold text-xs transition-all active:scale-95 border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${btnBg}`}
+                  title={totalSteps === 0 ? "Drag players or ball on the pitch to record movements first" : "Play entire tactic from start (3s Countdown)"}
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Play All</span>
                 </button>
               </>
             )}

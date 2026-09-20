@@ -60,6 +60,8 @@ export interface FrameState {
   activeElementId: string | null;
   positions: Record<string, Vector2D>;
   ballPos: Vector2D;
+  hasUnplayedSteps?: boolean;
+  lastCompletedStepIndex?: number;
 }
 
 export type FrameListener = (state: FrameState) => void;
@@ -138,6 +140,7 @@ export class TacticAnimator {
   public playbackSpeed: number = 1.0;
   public stepDurationMs: number = 520; // Base milliseconds per step for fluid, athletic motion
   public pauseBetweenStepsMs: number = 30; // Crisp inter-action transition
+  public lastCompletedStepIndex: number = -1;
 
   // Internal Animation Loop State
   private rafId: number | null = null;
@@ -243,6 +246,11 @@ export class TacticAnimator {
       this.currentPositions['ball'] = { ...newStep.ballTo };
     }
 
+    if (this.status === 'completed') {
+      this.status = 'idle';
+      this.emitStatus();
+    }
+
     this.emitState();
     return newStep;
   }
@@ -269,6 +277,7 @@ export class TacticAnimator {
     this.steps = [];
     this.currentStepIndex = 0;
     this.stepProgress = 0;
+    this.lastCompletedStepIndex = -1;
     this.emitState();
   }
 
@@ -285,6 +294,7 @@ export class TacticAnimator {
     });
     this.currentStepIndex = 0;
     this.stepProgress = 0;
+    this.lastCompletedStepIndex = -1;
     this.emitState();
   }
 
@@ -301,6 +311,7 @@ export class TacticAnimator {
     this.playbackMode = mode;
     this.stop();
     this.resetToInitialPositions();
+    this.lastCompletedStepIndex = -1;
 
     if (withCountdown) {
       this.status = 'countdown';
@@ -330,9 +341,79 @@ export class TacticAnimator {
   }
 
   /**
+   * CONTINUE PLAYBACK:
+   * Continues the tactical motion from where the playback stopped or from the newly added keyframes,
+   * without resetting all players and the ball back to the starting positions.
+   */
+  public continuePlayback(mode: PlaybackMode = 'sequential'): void {
+    if (this.steps.length === 0) return;
+
+    if (this.status === 'paused') {
+      this.resume();
+      return;
+    }
+
+    if (this.status === 'playing' || this.status === 'countdown') {
+      return;
+    }
+
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+
+    this.playbackMode = mode;
+    this.status = 'playing';
+    this.emitStatus();
+
+    // Determine starting step index
+    let startIndex = 0;
+    if (this.lastCompletedStepIndex >= 0 && this.lastCompletedStepIndex < this.steps.length - 1) {
+      startIndex = this.lastCompletedStepIndex + 1;
+    } else if (this.currentStepIndex >= 0 && this.currentStepIndex < this.steps.length) {
+      startIndex = this.currentStepIndex;
+    } else {
+      startIndex = 0;
+    }
+
+    this.currentStepIndex = startIndex;
+    this.stepProgress = 0;
+    this.unitProgress = 0;
+
+    if (mode === 'unit') {
+      this.startUnitPlaybackLoop(true, startIndex);
+    } else {
+      this.startPlaybackLoop(true);
+    }
+  }
+
+  /**
+   * CONTINUE AS UNIT:
+   * Continues playback from current stopped position with all remaining/new elements moving simultaneously.
+   */
+  public continueUnitPlayback(): void {
+    this.continuePlayback('unit');
+  }
+
+  /**
+   * Returns true if there are unplayed steps after the last completed step or current stopped position
+   */
+  public hasUnplayedSteps(): boolean {
+    if (this.steps.length === 0) return false;
+    return this.steps.length - 1 > this.lastCompletedStepIndex;
+  }
+
+  /**
    * Build complete movement trajectories for all unique elements that were recorded.
    */
   public getElementTrajectories(): ElementTrajectory[] {
+    return this.getElementTrajectoriesFrom(0);
+  }
+
+  /**
+   * Build movement trajectories starting from a specific step index
+   */
+  public getElementTrajectoriesFrom(startIndex: number = 0): ElementTrajectory[] {
     const elementMap = new Map<
       string,
       {
@@ -345,10 +426,13 @@ export class TacticAnimator {
       }
     >();
 
-    for (const step of this.steps) {
+    const targetSteps = this.steps.slice(startIndex);
+    if (targetSteps.length === 0) return [];
+
+    for (const step of targetSteps) {
       let entry = elementMap.get(step.elementId);
       if (!entry) {
-        const initial = this.initialPositions[step.elementId];
+        const initial = startIndex === 0 ? this.initialPositions[step.elementId] : null;
         const startPos = initial ? { x: initial.x, y: initial.y } : { ...step.from };
         entry = {
           type: step.type || (step.elementId === 'ball' ? 'ball' : 'player'),
@@ -422,10 +506,10 @@ export class TacticAnimator {
   /**
    * Calculate fluid athletic duration for unit team movement based on maximum travel distance
    */
-  public getUnitDuration(): number {
-    const trajectories = this.getElementTrajectories();
+  public getUnitDuration(trajectories?: ElementTrajectory[]): number {
+    const list = trajectories || this.getElementTrajectories();
     let maxDist = 0;
-    trajectories.forEach((traj) => {
+    list.forEach((traj) => {
       let d = 0;
       for (let i = 0; i < traj.waypoints.length - 1; i++) {
         d += distance2D(traj.waypoints[i], traj.waypoints[i + 1]);
@@ -456,7 +540,7 @@ export class TacticAnimator {
         this.stepProgress = 0;
         this.unitProgress = 0;
         if (this.playbackMode === 'unit') {
-          this.startUnitPlaybackLoop(true);
+          this.startUnitPlaybackLoop(true, 0);
         } else {
           this.startPlaybackLoop(true);
         }
@@ -481,16 +565,17 @@ export class TacticAnimator {
   /**
    * Unit Playback Loop: Moves all relocated players and ball simultaneously as one synchronized unit
    */
-  private startUnitPlaybackLoop = (resetStartTime: boolean = true): void => {
-    const trajectories = this.getElementTrajectories();
+  private startUnitPlaybackLoop = (resetStartTime: boolean = true, startIndex: number = 0): void => {
+    const trajectories = startIndex > 0 ? this.getElementTrajectoriesFrom(startIndex) : this.getElementTrajectories();
     if (trajectories.length === 0) {
       this.status = 'completed';
+      this.lastCompletedStepIndex = this.steps.length - 1;
       this.emitStatus();
       this.emitState();
       return;
     }
 
-    const unitDuration = this.getUnitDuration();
+    const unitDuration = this.getUnitDuration(trajectories);
 
     if (resetStartTime) {
       this.unitStartTime = performance.now();
@@ -530,7 +615,7 @@ export class TacticAnimator {
         activeElementId: null, // Moving as one complete squad unit!
         overallProgress: rawProgress,
         stepProgress: rawProgress,
-        currentStepIndex: Math.min(this.steps.length - 1, Math.floor(rawProgress * this.steps.length)),
+        currentStepIndex: Math.min(this.steps.length - 1, startIndex + Math.floor(rawProgress * (this.steps.length - startIndex))),
       });
 
       if (rawProgress >= 1.0) {
@@ -549,6 +634,7 @@ export class TacticAnimator {
         this.status = 'completed';
         this.unitProgress = 1.0;
         this.stepProgress = 1.0;
+        this.lastCompletedStepIndex = this.steps.length - 1;
         this.currentStepIndex = Math.max(0, this.steps.length - 1);
         this.emitStatus();
         this.emitState({
@@ -582,6 +668,7 @@ export class TacticAnimator {
       if (!currentStep) {
         // Finished all steps!
         this.status = 'completed';
+        this.lastCompletedStepIndex = this.steps.length - 1;
         this.emitStatus();
         this.emitState();
         return;
@@ -635,12 +722,14 @@ export class TacticAnimator {
           this.currentPositions['ball'] = { ...currentStep.ballTo };
         }
 
+        this.lastCompletedStepIndex = this.currentStepIndex;
         this.currentStepIndex++;
         this.stepStartTime = performance.now();
 
         if (this.currentStepIndex >= this.steps.length) {
           // Playback completed
           this.status = 'completed';
+          this.lastCompletedStepIndex = this.steps.length - 1;
           this.emitStatus();
           this.emitState();
           return;
@@ -798,6 +887,8 @@ export class TacticAnimator {
       activeElementId: extra.activeElementId ?? null,
       positions: { ...this.currentPositions },
       ballPos: { ...this.ballPos },
+      hasUnplayedSteps: this.hasUnplayedSteps(),
+      lastCompletedStepIndex: this.lastCompletedStepIndex,
       ...extra,
     };
 
