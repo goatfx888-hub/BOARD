@@ -2053,7 +2053,6 @@ const PitchComponent: React.FC<PitchProps> = ({
                 : player;
 
               const { xPos, yPos } = getPlayerDisplayPosition(effectivePlayer, 'home', matchMode, orientation);
-              const isReceiving = receivingPlayerId === player.id;
               const isBeingDragged = draggingPlayerId === player.id;
               const isVisible = matchMode !== 'away_only';
 
@@ -2072,17 +2071,14 @@ const PitchComponent: React.FC<PitchProps> = ({
                     transition: isBeingDragged || isAnimating
                       ? 'none'
                       : 'left 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease-out, transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1)',
-                    zIndex: isBeingDragged ? 60 : selectedPlayerId === player.id || isReceiving ? 45 : isVisible ? 38 : 10,
+                    zIndex: isBeingDragged ? 60 : selectedPlayerId === player.id ? 45 : isVisible ? 38 : 10,
                   }}
                   className={`player-card-token touch-none select-none cursor-grab active:cursor-grabbing relative ${
                     isBeingDragged
-                      ? 'drop-shadow-[0_8px_16px_rgba(16,185,129,0.8)] ring-2 ring-emerald-400 rounded-full'
+                      ? 'drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] ring-2 ring-white rounded-full'
                       : 'hover:scale-105'
                   }`}
                 >
-                  {isReceiving && (
-                    <div className="absolute -inset-2 rounded-full border-2 border-emerald-400 bg-emerald-400/20 animate-ping pointer-events-none z-0" />
-                  )}
                   <PlayerCard
                     player={effectivePlayer}
                     kit={squad.kit}
@@ -2121,7 +2117,6 @@ const PitchComponent: React.FC<PitchProps> = ({
                   : player;
 
                 const { xPos, yPos } = getPlayerDisplayPosition(effectivePlayer, 'away', matchMode, orientation);
-                const isReceiving = receivingPlayerId === player.id;
                 const isBeingDragged = draggingPlayerId === player.id;
                 const isVisible = matchMode !== 'home_only';
 
@@ -2140,7 +2135,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                       transition: isBeingDragged || isAnimating
                         ? 'none'
                         : 'left 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease-out, transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1)',
-                      zIndex: isBeingDragged ? 60 : selectedPlayerId === player.id || isReceiving ? 45 : isVisible ? 38 : 10,
+                      zIndex: isBeingDragged ? 60 : selectedPlayerId === player.id ? 45 : isVisible ? 38 : 10,
                     }}
                     className={`player-card-token touch-none select-none cursor-grab active:cursor-grabbing relative ${
                       isBeingDragged
@@ -2148,9 +2143,6 @@ const PitchComponent: React.FC<PitchProps> = ({
                         : 'hover:scale-105'
                     }`}
                   >
-                    {isReceiving && (
-                      <div className="absolute -inset-2 rounded-full border-2 border-emerald-400 bg-emerald-400/20 animate-ping pointer-events-none z-0" />
-                    )}
                     <PlayerCard
                       player={effectivePlayer}
                       kit={awaySquad.kit}

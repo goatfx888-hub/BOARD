@@ -52,7 +52,7 @@ const PlayerCardComponent: React.FC<PlayerCardProps> = ({
       onDoubleClick={onDoubleClick}
       className={`group relative flex flex-col items-center cursor-pointer select-none touch-none transition-[transform,filter] duration-200 ease-out transform ${
         isSelected
-          ? 'scale-110 z-30 drop-shadow-[0_0_12px_rgba(16,185,129,0.85)]'
+          ? 'scale-110 z-30 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]'
           : 'hover:scale-105 hover:z-20'
       }`}
     >
@@ -82,7 +82,7 @@ const PlayerCardComponent: React.FC<PlayerCardProps> = ({
         <div
           className={`relative flex items-center justify-center rounded-full border-2 shadow-md transition-[border-color,box-shadow,transform] duration-200 ease-out overflow-hidden ${tokenDimensions} ${
             isSelected
-              ? 'border-emerald-400 ring-2 ring-emerald-400/80 scale-105'
+              ? 'border-white ring-2 ring-white/90 scale-105 shadow-lg'
               : 'border-white/90 group-hover:border-white'
           }`}
           style={{
@@ -137,7 +137,7 @@ const PlayerCardComponent: React.FC<PlayerCardProps> = ({
         <div
           className={`mt-0.5 ${nameBannerWidth} px-1 py-0.2 sm:px-1.5 sm:py-0.5 rounded sm:rounded-md shadow-md text-center border backdrop-blur-md transition-[background-color,border-color,color] duration-200 ease-out ${
             isSelected
-              ? 'bg-emerald-500 text-slate-950 border-emerald-300 font-extrabold shadow-emerald-500/30'
+              ? 'bg-white text-slate-950 border-white font-extrabold shadow-md'
               : 'bg-slate-950/90 text-slate-100 border-white/20 font-semibold group-hover:border-white/40'
           }`}
         >
