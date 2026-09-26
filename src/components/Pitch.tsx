@@ -1226,8 +1226,8 @@ const PitchComponent: React.FC<PitchProps> = ({
       setIsPassing(true);
       setReceivingPlayerId(player.id);
 
-      // Roll ball rotation proportionally to pass distance
-      const rollTurns = Math.max(360, Math.round(dist * 16));
+      // Roll ball rotation proportionally and smoothly with pass distance
+      const rollTurns = Math.max(360, Math.round(dist * 20));
       setBallRotation((prev) => prev + (dx >= 0 ? rollTurns : -rollTurns));
       setBallPos({ x: targetX, y: targetY });
 
@@ -1248,7 +1248,7 @@ const PitchComponent: React.FC<PitchProps> = ({
       passTimerRef.current = setTimeout(() => {
         setIsPassing(false);
         setReceivingPlayerId(null);
-      }, 550);
+      }, 660);
     }
 
     if (selectedPlayerId === player.id) {
@@ -1901,7 +1901,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                     transition: isDraggingBall || isAnimating
                       ? 'none'
                       : isPassing
-                      ? 'left 0.38s cubic-bezier(0.16, 1, 0.3, 1), top 0.38s cubic-bezier(0.16, 1, 0.3, 1)'
+                      ? 'left 0.65s cubic-bezier(0.25, 1, 0.5, 1), top 0.65s cubic-bezier(0.25, 1, 0.5, 1)'
                       : 'left 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.4s cubic-bezier(0.2, 0.9, 0.3, 1)',
                   }}
                   className="touch-none select-none cursor-grab active:cursor-grabbing group/ball"
@@ -1921,7 +1921,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                         isAnimating && (animatorState.activeElementId === 'ball' || animatorRef.current.steps[animatorState.currentStepIndex]?.carriedBall)
                           ? `rotate(${ballRotation + animatorState.stepProgress * 720}deg)`
                           : `rotate(${ballRotation}deg)`,
-                      transition: isPassing ? 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
+                      transition: isPassing ? 'transform 0.65s cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
                     }}
                     className={`relative transition-transform duration-150 active:scale-95 filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.7)] ${
                       isPassing ? 'scale-125' : 'group-hover/ball:scale-115'
