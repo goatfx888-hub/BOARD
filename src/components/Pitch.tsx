@@ -22,6 +22,7 @@ import {
   ElementSnapshot,
   RecordedStep,
 } from '../utils/tacticAnimator';
+import { playBallThumpSound } from '../utils/audio';
 import {
   Check,
   RotateCcw,
@@ -1225,6 +1226,9 @@ const PitchComponent: React.FC<PitchProps> = ({
     if (dist > 0.3) {
       setIsPassing(true);
       setReceivingPlayerId(player.id);
+      
+      // Play subtle acoustic thump sound effect when ball starts rolling to player
+      playBallThumpSound();
 
       // Roll ball rotation proportionally and smoothly with pass distance
       const rollTurns = Math.max(360, Math.round(dist * 20));

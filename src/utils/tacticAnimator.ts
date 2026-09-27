@@ -15,6 +15,8 @@
  * 6. Playback controls: Play, Pause, Step Forward/Back, Speed Scaling, Scrubbing
  */
 
+import { playBallThumpSound } from './audio';
+
 export interface Vector2D {
   x: number; // 0 to 100 percentage coordinates
   y: number; // 0 to 100 percentage coordinates
@@ -149,6 +151,7 @@ export class TacticAnimator {
   private unitStartTime: number = 0;
   private countdownStartTime: number = 0;
   private countdownDurationMs: number = 3000;
+  private lastSoundStepIndex: number = -1;
   private listeners: Set<FrameListener> = new Set();
   private statusListeners: Set<StatusListener> = new Set();
 
@@ -677,6 +680,14 @@ export class TacticAnimator {
       // Calculate distance-aware dynamic step duration (snappy short runs, fluid long crosses)
       const dist = distance2D(currentStep.from, currentStep.to);
       const isBallPass = currentStep.elementId === 'ball' || currentStep.type === 'ball';
+
+      if (this.currentStepIndex !== this.lastSoundStepIndex) {
+        this.lastSoundStepIndex = this.currentStepIndex;
+        if (isBallPass || currentStep.carriedBall) {
+          playBallThumpSound(0.24);
+        }
+      }
+
       // Passes travel fast and crisp, player runs move at realistic athletic pace
       const stepDuration = isBallPass
         ? Math.max(280, Math.min(520, 240 + dist * 5.0)) / this.playbackSpeed
@@ -859,6 +870,7 @@ export class TacticAnimator {
     this.currentStepIndex = 0;
     this.stepProgress = 0;
     this.unitProgress = 0;
+    this.lastSoundStepIndex = -1;
   }
 
   private emitStatus(): void {
