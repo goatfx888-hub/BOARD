@@ -1255,10 +1255,9 @@ const PitchComponent: React.FC<PitchProps> = ({
       }, 660);
     }
 
-    if (selectedPlayerId === player.id) {
+    // Do not select player when passing the ball to them
+    if (selectedPlayerId) {
       onSelectPlayer('');
-    } else {
-      onSelectPlayer(player.id, team);
     }
   };
 
@@ -2080,7 +2079,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                   className={`player-card-token touch-none select-none cursor-grab active:cursor-grabbing relative ${
                     isBeingDragged
                       ? 'drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] ring-2 ring-white rounded-full'
-                      : 'hover:scale-105'
+                      : ''
                   }`}
                 >
                   <PlayerCard
@@ -2144,7 +2143,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                     className={`player-card-token touch-none select-none cursor-grab active:cursor-grabbing relative ${
                       isBeingDragged
                         ? 'drop-shadow-[0_8px_16px_rgba(244,63,94,0.8)] ring-2 ring-rose-400 rounded-full'
-                        : 'hover:scale-105'
+                        : ''
                     }`}
                   >
                     <PlayerCard

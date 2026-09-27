@@ -1,6 +1,5 @@
 import React from 'react';
 import { Player, KitConfig } from '../types';
-import { Shield, Sparkles, Award, Footprints, Target, Flag } from 'lucide-react';
 
 interface PlayerCardProps {
   player: Player;
@@ -50,39 +49,19 @@ const PlayerCardComponent: React.FC<PlayerCardProps> = ({
     <div
       onClick={onClick}
       onDoubleClick={onDoubleClick}
-      className={`group relative flex flex-col items-center cursor-pointer select-none touch-none transition-[transform,filter] duration-200 ease-out transform ${
+      className={`group relative flex flex-col items-center cursor-pointer select-none touch-none transition-[filter] duration-200 ease-out ${
         isSelected
-          ? 'scale-110 z-30 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]'
-          : 'hover:scale-105 hover:z-20'
+          ? 'z-30 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]'
+          : 'hover:z-20'
       }`}
     >
       {/* Jersey / Avatar Token Container */}
       <div className="relative flex items-center justify-center">
-        {/* Special Roles Badges (Captain C, PK) */}
-        <div className="absolute -top-1 -right-1 z-20 flex gap-0.5">
-          {player.isCaptain && (
-            <span
-              title="Captain"
-              className="bg-amber-400 text-slate-950 font-black text-[6.5px] sm:text-[7.5px] w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full flex items-center justify-center border border-slate-950 shadow"
-            >
-              C
-            </span>
-          )}
-          {player.isPenaltyTaker && (
-            <span
-              title="Penalty Taker"
-              className="bg-rose-500 text-white font-black text-[6px] sm:text-[7px] w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full flex items-center justify-center border border-slate-950 shadow"
-            >
-              PK
-            </span>
-          )}
-        </div>
-
         {/* Custom Shirt Graphic Icon or Uploaded Player Avatar */}
         <div
-          className={`relative flex items-center justify-center rounded-full border-2 shadow-md transition-[border-color,box-shadow,transform] duration-200 ease-out overflow-hidden ${tokenDimensions} ${
+          className={`relative flex items-center justify-center rounded-full border-2 shadow-md transition-[border-color,box-shadow] duration-200 ease-out overflow-hidden ${tokenDimensions} ${
             isSelected
-              ? 'border-white ring-2 ring-white/90 scale-105 shadow-lg'
+              ? 'border-white ring-2 ring-white/90 shadow-lg ring-offset-1 ring-offset-black/40'
               : 'border-white/90 group-hover:border-white'
           }`}
           style={{
