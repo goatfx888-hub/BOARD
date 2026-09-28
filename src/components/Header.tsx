@@ -719,24 +719,6 @@ export const Header: React.FC<HeaderProps> = ({
               <Pencil className="w-4 h-4 text-emerald-500 shrink-0" />
             </button>
 
-            {/* Mobile Fullscreen Toggle */}
-            {onToggleFullscreen && (
-              <button
-                type="button"
-                onClick={onToggleFullscreen}
-                className={`p-1.5 rounded-xl border text-xs font-bold flex items-center justify-center shadow-sm active:scale-95 transition cursor-pointer ${
-                  isFullscreen
-                    ? 'bg-emerald-500 text-slate-950 border-emerald-400'
-                    : isLight
-                    ? 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-                    : 'bg-neutral-900 text-neutral-300 border-neutral-800 hover:bg-neutral-800'
-                }`}
-                title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-              >
-                <Scan className="w-4 h-4 text-emerald-400 shrink-0" />
-              </button>
-            )}
-
             {/* Mobile Theme Toggle */}
             <button
               type="button"

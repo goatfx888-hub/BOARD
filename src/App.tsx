@@ -67,56 +67,11 @@ export default function App() {
 
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawingType, setDrawingType] = useState<'pass' | 'run' | 'dribble' | 'press'>('run');
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
   const [isKitModalOpen, setIsKitModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [mobileView, setMobileView] = useState<'pitch' | 'tactics' | 'all'>('pitch');
 
   const exportPitchRef = useRef<HTMLDivElement>(null);
-
-  // Fullscreen toggle handler (disabled on computer/laptop)
-  const handleToggleFullscreen = () => {
-    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-      return;
-    }
-    if (!isFullscreen) {
-      setIsFullscreen(true);
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
-    } else {
-      setIsFullscreen(false);
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      }
-    }
-  };
-
-  // Keyboard shortcut & browser fullscreen change listener
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && isFullscreen) {
-        setIsFullscreen(false);
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreen) {
-        setIsFullscreen(false);
-        if (document.fullscreenElement && document.exitFullscreen) {
-          document.exitFullscreen().catch(() => {});
-        }
-      }
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isFullscreen]);
 
   // Active Squad computed property
   const currentSquad = activeTeam === 'home' ? homeSquad : awaySquad;
@@ -603,59 +558,11 @@ export default function App() {
         : 'bg-black text-slate-100 selection:bg-emerald-500 selection:text-slate-950'
     }`}>
       {/* Landing Home Page View */}
-      {currentView === 'landing' && !isFullscreen ? (
+      {currentView === 'landing' ? (
         <LandingPage
           onLaunchBoard={handleLaunchBoard}
           onOpenLegal={handleOpenLegal}
         />
-      ) : isFullscreen ? (
-        /* Fullscreen Board View Mode (Matches reference old layout with single top control bar) */
-        <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-between p-1 sm:p-2 ios-fs-root overflow-hidden select-none animate-in fade-in duration-200 ${
-          isLight ? 'bg-slate-100' : 'bg-black'
-        }`}>
-          <div className="w-full h-full flex flex-col items-center justify-between min-h-0 overflow-hidden">
-            <Pitch
-              boardRef={exportPitchRef}
-              squad={homeSquad}
-              awaySquad={awaySquad}
-              matchMode={matchMode}
-              onMatchModeChange={handleMatchModeChange}
-              showNames={showNames}
-              tokenDisplayMode={tokenDisplayMode}
-              texture={texture}
-              perspective={perspective}
-              lighting={lighting}
-              orientation={orientation}
-              selectedPlayerId={selectedPlayerId}
-              onSelectPlayer={(id, team) => {
-                setSelectedPlayerId(id);
-                if (team) setActiveTeam(team);
-              }}
-              onSwapPlayers={handleSwapPlayers}
-              onUpdatePlayerPosition={handleUpdatePlayerPosition}
-              onBatchUpdatePositions={handleBatchUpdatePitchPositions}
-              isDrawingMode={isDrawingMode}
-              drawingType={drawingType}
-              onAddArrow={handleAddArrow}
-              onUpdateArrow={handleUpdateArrow}
-              onRemoveArrow={handleRemoveArrow}
-              onResetBoard={handleResetBoard}
-              isFullscreen={true}
-              onToggleFullscreen={handleToggleFullscreen}
-              onToggleDrawingMode={() => setIsDrawingMode(!isDrawingMode)}
-              onChangeDrawingType={setDrawingType}
-              onClearArrows={handleClearArrows}
-              onChangeTexture={setTexture}
-              onChangePerspective={setPerspective}
-              onChangeLighting={setLighting}
-              onChangeOrientation={setOrientation}
-              onToggleShowNames={() => setShowNames(!showNames)}
-              onOpenPlayerNamer={() => setIsPlayerNamerOpen(true)}
-              onExportImage={() => setIsExportModalOpen(true)}
-              onOpenKitModal={() => setIsKitModalOpen(true)}
-            />
-          </div>
-        </div>
       ) : (
         <>
           {/* Top Controls Header */}
@@ -686,8 +593,6 @@ export default function App() {
             onOpenKitModal={() => setIsKitModalOpen(true)}
             onResetBoard={handleResetBoard}
             onNavigateHome={() => setCurrentView('landing')}
-            isFullscreen={isFullscreen}
-            onToggleFullscreen={handleToggleFullscreen}
           />
 
           {/* Main Pitch & Tactical Board Area */}
@@ -806,8 +711,6 @@ export default function App() {
                       onUpdateArrow={handleUpdateArrow}
                       onRemoveArrow={handleRemoveArrow}
                       onResetBoard={handleResetBoard}
-                      isFullscreen={false}
-                      onToggleFullscreen={handleToggleFullscreen}
                       onToggleDrawingMode={() => setIsDrawingMode(!isDrawingMode)}
                       onChangeDrawingType={setDrawingType}
                       onClearArrows={handleClearArrows}
