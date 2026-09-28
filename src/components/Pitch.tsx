@@ -647,6 +647,10 @@ const PitchComponent: React.FC<PitchProps> = ({
     animatorRef.current.removeStep(index);
   };
 
+  const handleReorderSteps = (fromIndex: number, toIndex: number) => {
+    animatorRef.current.reorderSteps(fromIndex, toIndex);
+  };
+
   const handleLoadSampleTactic = () => {
     animatorRef.current.clearSteps();
     syncInitialPositions();
@@ -1294,15 +1298,15 @@ const PitchComponent: React.FC<PitchProps> = ({
     ? 'aspect-[10/7] w-full'
     : 'aspect-[9/16] sm:aspect-[7/10] w-full';
 
-  // Responsive container sizing: tailored for regular and friendly fullscreen laptop/mobile view
+  // Responsive container sizing: fills full screen resolution in fullscreen mode
   const pitchWidthClass = isFullscreen
-    ? 'w-full h-full max-h-screen mx-auto flex flex-col items-center justify-between overflow-hidden'
+    ? 'w-full h-full max-w-none flex-1 flex flex-col items-center justify-center overflow-hidden'
     : (orientation === 'horizontal' ? 'max-w-4xl md:max-w-[780px] lg:max-w-[1020px] xl:max-w-[1060px]' : 'w-full max-w-[460px] sm:max-w-2xl md:max-w-[640px] lg:max-w-[720px] xl:max-w-[760px]');
 
   const pitchAspectClass = isFullscreen
     ? (orientation === 'horizontal'
-        ? 'h-full max-h-full max-w-full aspect-[10/7] flex items-center justify-center'
-        : 'h-full max-h-full w-full max-w-full aspect-[9/16] md:aspect-[7/10] flex items-center justify-center')
+        ? 'w-full h-full max-w-full max-h-full aspect-[10/7] flex items-center justify-center mx-auto'
+        : 'w-full h-full max-w-full max-h-full aspect-[9/16] sm:aspect-[7/10] flex items-center justify-center mx-auto')
     : `w-full ${containerAspect}`;
 
   // In fullscreen mode on desktop (md+ screens), drawing can stay always ready; on mobile, it follows whether Tools are open
@@ -1316,131 +1320,15 @@ const PitchComponent: React.FC<PitchProps> = ({
 
   return (
     <div className={`relative w-full ${pitchWidthClass} ${isFullscreen ? 'ios-fs-pitch-container' : ''} mx-auto flex flex-col items-center select-none ${isFullscreen ? 'p-0.5 sm:p-1.5 gap-1 sm:gap-1.5 justify-between min-h-0' : 'py-1 gap-2'}`}>
-      {/* Mobile / iPhone Fullscreen Header (2-row layout exactly matching user reference screenshot) */}
-      {isFullscreen && (
-        <div className="flex sm:hidden w-full max-w-sm mx-auto flex-col items-center gap-1.5 p-1.5 rounded-2xl bg-neutral-900/95 border border-neutral-800 shadow-xl backdrop-blur-md shrink-0 z-30">
-          {/* Row 1: Home, Both (VS), Away, Zones */}
-          <div className="flex items-center justify-center gap-1.5 w-full">
-            {onMatchModeChange && (
-              <>
-                <button
-                  onClick={() => {
-                    onMatchModeChange('home_only');
-                    onSelectTeam?.('home');
-                  }}
-                  className={`px-3 py-1 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 ${
-                    matchMode === 'home_only'
-                      ? 'bg-white text-slate-950 font-extrabold shadow-sm'
-                      : 'bg-black/90 text-neutral-200 border border-neutral-800'
-                  }`}
-                >
-                  <span
-                    className="w-2 h-2 rounded-full border border-slate-900 shrink-0"
-                    style={{ backgroundColor: squad.kit.primaryColor }}
-                  />
-                  <span>Home</span>
-                </button>
-
-                <button
-                  onClick={() => onMatchModeChange('home_vs_away')}
-                  className={`px-3 py-1 rounded-xl font-black text-xs transition-all flex items-center gap-1 shrink-0 ${
-                    matchMode === 'home_vs_away'
-                      ? 'bg-[#f59e0b] text-slate-950 shadow-md font-extrabold'
-                      : 'bg-black/90 text-neutral-200 border border-neutral-800'
-                  }`}
-                >
-                  <span>Both (VS)</span>
-                </button>
-
-                {awaySquad && (
-                  <button
-                    onClick={() => {
-                      onMatchModeChange('away_only');
-                      onSelectTeam?.('away');
-                    }}
-                    className={`px-3 py-1 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 ${
-                      matchMode === 'away_only'
-                        ? 'bg-rose-500 text-white font-extrabold shadow-sm'
-                        : 'bg-black/90 text-neutral-200 border border-neutral-800'
-                    }`}
-                  >
-                    <span
-                      className="w-2 h-2 rounded-full border border-slate-900 shrink-0"
-                      style={{ backgroundColor: awaySquad.kit.primaryColor }}
-                    />
-                    <span>Away</span>
-                  </button>
-                )}
-              </>
-            )}
-
-            {/* Tactical Pitch Zones Button */}
-            <button
-              onClick={toggleZoneMode}
-              className={`px-2.5 py-1 rounded-xl font-bold text-xs transition-all flex items-center gap-1 shrink-0 ${
-                zoneMode !== 'off'
-                  ? 'bg-teal-500 text-slate-950 shadow-md ring-1 ring-teal-400 font-extrabold'
-                  : 'bg-black/90 text-teal-400 border border-teal-500/50'
-              }`}
-            >
-              <Grid3X3 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-              <span>Zones</span>
-            </button>
-          </div>
-
-          {/* Row 2: Tools, Reset, Exit Fullscreen */}
-          <div className="flex items-center justify-center gap-1.5 w-full">
-            {onToggleDrawingMode && (
-              <button
-                type="button"
-                onClick={onToggleDrawingMode}
-                className={`px-3 py-1 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 ${
-                  isDrawingMode
-                    ? 'bg-neutral-800 text-emerald-300 border border-emerald-500/60 ring-1 ring-emerald-400/50'
-                    : 'bg-black/90 text-amber-300 border border-amber-500/40'
-                }`}
-              >
-                <Pencil className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>Tools</span>
-                {isDrawingMode && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                )}
-              </button>
-            )}
-
-            {onResetBoard && (
-              <button
-                onClick={handleResetBoard}
-                className="px-3 py-1 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 bg-black/90 text-amber-300 border border-amber-500/40"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>Reset</span>
-              </button>
-            )}
-
-            {onToggleFullscreen && (
-              <button
-                onClick={onToggleFullscreen}
-                className="px-3.5 py-1 rounded-xl font-black text-xs transition-all flex items-center gap-1 shrink-0 bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-md active:scale-95"
-              >
-                <Minimize2 className="w-3.5 h-3.5 text-slate-950 shrink-0" />
-                <span className="font-mono text-[11px] font-black">&lt;&gt;</span>
-                <span>Exit Fullscreen</span>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Match Teams & Drawing Tools Control Bar (Desktop / Normal View) */}
-      <div className={`w-full ${
+      {/* Match Teams & Drawing Tools Control Bar (Floating pill in fullscreen, standard in normal) */}
+      <div className={`w-auto max-w-full ${
         isFullscreen
-          ? 'hidden sm:flex flex-nowrap overflow-x-auto justify-center px-1.5 sm:px-2 py-1 max-w-3xl scrollbar-none gap-1 sm:gap-2'
-          : 'flex flex-wrap items-center justify-center px-3 py-1.5 gap-1.5 sm:gap-2.5'
-      } backdrop-blur-md rounded-xl shadow-md text-xs shrink-0 z-30 ${
+          ? 'flex flex-nowrap overflow-x-auto justify-center px-2.5 sm:px-3 py-1 sm:py-1.5 scrollbar-none gap-1 sm:gap-2 rounded-2xl'
+          : 'flex flex-wrap items-center justify-center px-3 py-1.5 gap-1.5 sm:gap-2.5 rounded-xl'
+      } backdrop-blur-md shadow-md text-xs shrink-0 z-30 ${
         isLight
-          ? 'bg-white/95 border border-slate-200 shadow-slate-200/60'
-          : 'bg-neutral-900/95 border border-neutral-800'
+          ? 'bg-white/95 border border-slate-200 shadow-slate-200/60 text-slate-800'
+          : 'bg-neutral-900/95 border border-neutral-800 text-neutral-100'
       }`}>
         {/* Team Selector */}
         {onMatchModeChange ? (
@@ -1552,36 +1440,6 @@ const PitchComponent: React.FC<PitchProps> = ({
           >
             <RotateCcw className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-amber-700' : 'text-amber-400'}`} />
             <span>Reset</span>
-          </button>
-        )}
-
-        {/* Fullscreen Button (<>) */}
-        {onToggleFullscreen && (
-          <button
-            onClick={onToggleFullscreen}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl font-extrabold text-xs transition active:scale-95 shadow-sm shrink-0 cursor-pointer ${
-              isFullscreen
-                ? 'bg-emerald-500 text-slate-950 shadow-md ring-2 ring-emerald-400/80 font-black'
-                : isLight
-                ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
-                : 'bg-neutral-800/90 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80'
-            }`}
-            title={isFullscreen ? "Exit Fullscreen Mode (Esc)" : "Full Screen (<>)"}
-          >
-            {isFullscreen ? (
-              <>
-                <Minimize2 className="w-3.5 h-3.5 text-slate-950 shrink-0" />
-                <span className="font-mono text-[11px] font-black">&lt;&gt;</span>
-                <span className="hidden sm:inline">Exit Fullscreen</span>
-                <span className="inline sm:hidden">Exit</span>
-              </>
-            ) : (
-              <>
-                <Maximize2 className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`} />
-                <span className={`font-mono text-[11px] font-black ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>&lt;&gt;</span>
-                <span>Fullscreen</span>
-              </>
-            )}
           </button>
         )}
 
@@ -2193,6 +2051,7 @@ const PitchComponent: React.FC<PitchProps> = ({
         onStop={handleStopTactic}
         onSeekStep={handleSeekStep}
         onRemoveStep={handleRemoveStep}
+        onReorderSteps={handleReorderSteps}
         onClearSteps={handleClearSteps}
         playbackSpeed={playbackSpeed}
         onChangeSpeed={handleChangeSpeed}

@@ -30,20 +30,20 @@ const PlayerCardComponent: React.FC<PlayerCardProps> = ({
   const shirtPrimary = isGK ? kit.gkPrimaryColor : kit.primaryColor;
   const shirtSecondary = isGK ? kit.gkSecondaryColor : kit.secondaryColor;
 
-  // Proportional token sizes: slightly larger on phone devices for improved touch & legibility, keeping tablet & desktop optimal
+  // Original standard player token dimensions
   const tokenDimensions =
     size === 'sm'
-      ? 'w-[26px] h-[26px] sm:w-[28px] sm:h-[28px] md:w-[31px] md:h-[31px] lg:w-[34px] lg:h-[34px] text-[8.5px] sm:text-[9.5px] md:text-[10px]'
+      ? 'w-[28px] h-[28px] sm:w-[30px] sm:h-[30px] md:w-[32px] md:h-[32px] lg:w-[34px] lg:h-[34px] text-[9px] sm:text-[10px] md:text-[11px]'
       : size === 'lg'
-      ? 'w-[34px] h-[34px] sm:w-[35px] sm:h-[35px] md:w-[38px] md:h-[38px] lg:w-[41px] lg:h-[41px] text-[10.5px] sm:text-xs md:text-[13px]'
-      : 'w-[30.5px] h-[30.5px] sm:w-[31px] sm:h-[31px] md:w-[34px] md:h-[34px] lg:w-[37px] lg:h-[37px] text-[9.5px] sm:text-[10px] md:text-[10.5px]';
+      ? 'w-[36px] h-[36px] sm:w-[38px] sm:h-[38px] md:w-[42px] md:h-[42px] lg:w-[46px] lg:h-[46px] text-[11px] sm:text-[12px] md:text-[13px]'
+      : 'w-[32px] h-[32px] sm:w-[34px] sm:h-[34px] md:w-[36px] md:h-[36px] lg:w-[38px] lg:h-[38px] text-[10px] sm:text-[11px] md:text-[12px]';
 
   const nameBannerWidth =
     size === 'sm'
-      ? 'max-w-[54px] sm:max-w-[62px] md:max-w-[70px] lg:max-w-[76px]'
+      ? 'max-w-[56px] sm:max-w-[62px] md:max-w-[70px] lg:max-w-[76px]'
       : size === 'lg'
-      ? 'max-w-[66px] sm:max-w-[76px] md:max-w-[86px] lg:max-w-[94px]'
-      : 'max-w-[60px] sm:max-w-[68px] md:max-w-[76px] lg:max-w-[82px]';
+      ? 'max-w-[70px] sm:max-w-[80px] md:max-w-[90px] lg:max-w-[100px]'
+      : 'max-w-[60px] sm:max-w-[68px] md:max-w-[76px] lg:max-w-[84px]';
 
   return (
     <div

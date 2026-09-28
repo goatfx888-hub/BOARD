@@ -75,8 +75,11 @@ export default function App() {
 
   const exportPitchRef = useRef<HTMLDivElement>(null);
 
-  // Fullscreen toggle handler with native Browser Fullscreen API integration
+  // Fullscreen toggle handler (disabled on computer/laptop)
   const handleToggleFullscreen = () => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      return;
+    }
     if (!isFullscreen) {
       setIsFullscreen(true);
       if (document.documentElement.requestFullscreen) {
@@ -606,25 +609,10 @@ export default function App() {
           onOpenLegal={handleOpenLegal}
         />
       ) : isFullscreen ? (
-        /* Fullscreen Board View Mode (Hides all other tools and page chrome on ALL devices) */
+        /* Fullscreen Board View Mode (Matches reference old layout with single top control bar) */
         <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-between p-1 sm:p-2 ios-fs-root overflow-hidden select-none animate-in fade-in duration-200 ${
           isLight ? 'bg-slate-100' : 'bg-black'
         }`}>
-          {/* Quick Exit Fullscreen button floating top right for instant touch exit on phones & tablets */}
-          <button
-            onClick={handleToggleFullscreen}
-            className={`hidden sm:flex absolute top-2 right-2 z-[10000] font-extrabold px-2.5 py-1 rounded-xl shadow-xl items-center gap-1.5 text-xs active:scale-95 transition cursor-pointer backdrop-blur-md ${
-              isLight
-                ? 'bg-white/95 hover:bg-slate-100 text-slate-800 border border-slate-300 shadow-lg'
-                : 'bg-neutral-900/90 hover:bg-neutral-800 text-emerald-400 border border-emerald-500/50'
-            }`}
-            title="Exit Fullscreen Mode (Esc)"
-          >
-            <Minimize2 className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-slate-700' : 'text-emerald-400'}`} />
-            <span className="font-mono text-[11px] font-black">&lt;&gt;</span>
-            <span className="hidden sm:inline">Exit Fullscreen</span>
-          </button>
-
           <div className="w-full h-full flex flex-col items-center justify-between min-h-0 overflow-hidden">
             <Pitch
               boardRef={exportPitchRef}
@@ -698,6 +686,8 @@ export default function App() {
             onOpenKitModal={() => setIsKitModalOpen(true)}
             onResetBoard={handleResetBoard}
             onNavigateHome={() => setCurrentView('landing')}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={handleToggleFullscreen}
           />
 
           {/* Main Pitch & Tactical Board Area */}

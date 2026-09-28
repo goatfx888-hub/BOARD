@@ -11,9 +11,11 @@ import {
   Clock,
   Layers,
   Users,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { PlaybackStatus, PlaybackMode, RecordedStep } from '../utils/tacticAnimator';
-import { SquadData, Player } from '../types';
+import { SquadData } from '../types';
 import { useTheme } from '../context/ThemeContext';
 
 // Custom Crisp Vector SVG Icons
@@ -102,6 +104,7 @@ interface KeyframesRecordedStudioProps {
   onStop: () => void;
   onSeekStep: (index: number) => void;
   onRemoveStep: (index: number) => void;
+  onReorderSteps?: (fromIndex: number, toIndex: number) => void;
   onClearSteps: () => void;
   playbackSpeed: number;
   onChangeSpeed: (speed: number) => void;
@@ -128,6 +131,7 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
   onStop,
   onSeekStep,
   onRemoveStep,
+  onReorderSteps,
   onClearSteps,
   playbackSpeed,
   onChangeSpeed,
@@ -183,10 +187,6 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
     return Math.max(1, meters);
   };
 
-  const containerBg = isLight
-    ? 'bg-white border-slate-200/80 text-slate-900 shadow-xl shadow-slate-200/40'
-    : 'bg-black border-neutral-800 text-white shadow-2xl shadow-black';
-
   const subPanelBg = isLight
     ? 'bg-slate-50 border-slate-200/80'
     : 'bg-neutral-900/90 border-neutral-800';
@@ -195,252 +195,226 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
     ? 'bg-white border-slate-200 text-slate-900'
     : 'bg-neutral-950 border-neutral-800 text-neutral-100';
 
-  // Compact layout for fullscreen mode
+  // Sleek single-row floating bar for fullscreen mode matching reference screenshot
   if (isFullscreen) {
     return (
-      <div className={`w-full max-w-4xl backdrop-blur-xl rounded-2xl p-2 sm:p-2.5 shadow-2xl flex flex-col gap-2 border transition-all ${
-        isLight ? 'bg-white/95 border-slate-200 shadow-slate-300/60' : 'bg-black/95 border-neutral-800 shadow-black'
+      <div className={`w-fit max-w-full mx-auto backdrop-blur-xl rounded-2xl px-3.5 py-1.5 sm:py-2 shadow-xl flex items-center justify-center gap-1.5 sm:gap-2 border transition-all select-none overflow-x-auto scrollbar-none ${
+        isLight ? 'bg-white/95 border-slate-200 text-slate-800 shadow-slate-200/80' : 'bg-black/95 border-neutral-800 text-white shadow-black'
       }`}>
-        <div className="w-full flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2 text-xs">
-          {/* Main Controls + Step & Speed Controls */}
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full lg:w-auto">
-            {/* Primary Action Buttons (2-col on mobile, 4-col on tablet, inline on desktop) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center gap-1.5 w-full sm:w-auto">
-              {status === 'paused' ? (
+        {/* Playback action buttons */}
+        {status === 'paused' ? (
+          <>
+            <button
+              onClick={onResume || onPlay}
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/30 ring-1 ring-emerald-400/50 transition active:scale-95 cursor-pointer whitespace-nowrap"
+              title="Resume Tactic from current position"
+            >
+              <Play className="w-3.5 h-3.5 fill-current stroke-[2.5]" />
+              <span>Resume</span>
+            </button>
+            <button
+              onClick={onPlay}
+              className={`flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition active:scale-95 cursor-pointer whitespace-nowrap ${
+                isLight ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200' : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
+              }`}
+              title="Restart from Start (3s Timer)"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Restart</span>
+            </button>
+          </>
+        ) : (
+          <>
+            {/* Continue Sequential Button */}
+            <button
+              onClick={onContinue || onPlay}
+              disabled={totalSteps === 0}
+              className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition active:scale-95 border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                hasUnplayedSteps
+                  ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/30 ring-1 ring-emerald-400/60 animate-pulse border-emerald-400'
+                  : isLight
+                  ? 'bg-white hover:bg-slate-50 text-emerald-600 border-slate-200 shadow-xs'
+                  : 'bg-neutral-900 hover:bg-neutral-800 text-emerald-400 border-neutral-800'
+              }`}
+              title="Continue tactic step-by-step from where the move stopped"
+            >
+              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5] text-emerald-500" />
+              <span className="font-bold">Continue</span>
+            </button>
+
+            {/* Continue as Unit Button */}
+            <button
+              onClick={onContinueUnit || onPlayUnit}
+              disabled={totalSteps === 0}
+              className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition active:scale-95 border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                hasUnplayedSteps
+                  ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sky-500/30 ring-1 ring-sky-400/60 animate-pulse border-sky-400'
+                  : isLight
+                  ? 'bg-white hover:bg-slate-50 text-sky-600 border-slate-200 shadow-xs'
+                  : 'bg-neutral-900 hover:bg-neutral-800 text-sky-400 border-neutral-800'
+              }`}
+              title="Continue tactic moving all players simultaneously as a unit from current position"
+            >
+              <Users className="w-3.5 h-3.5 stroke-[2.5] text-sky-500" />
+              <span className="font-bold">Continue Unit</span>
+            </button>
+
+            {/* Play All Button */}
+            <button
+              onClick={() => {
+                if (isPlaying && playbackMode === 'sequential') {
+                  onPause();
+                } else {
+                  onPlay();
+                }
+              }}
+              disabled={totalSteps === 0}
+              className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition active:scale-95 border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                isPlaying && playbackMode === 'sequential'
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30 ring-1 ring-amber-400/50 border-amber-400'
+                  : isLight
+                  ? 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200 shadow-xs'
+                  : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
+              }`}
+              title={totalSteps === 0 ? "Drag players or ball on the pitch to record keyframes first" : "Play entire tactic from the start (3s Countdown)"}
+            >
+              {isPlaying && playbackMode === 'sequential' ? (
                 <>
-                  <button
-                    onClick={onResume || onPlay}
-                    className="w-full lg:w-auto flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl font-black text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/30 ring-2 ring-emerald-400/50 transition active:scale-95 cursor-pointer whitespace-nowrap"
-                    title="Resume Tactic from current position"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current stroke-[2.5]" />
-                    <span>Resume</span>
-                  </button>
-                  <button
-                    onClick={onPlay}
-                    className={`w-full lg:w-auto flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-xl border transition active:scale-95 cursor-pointer whitespace-nowrap ${
-                      isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200' : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
-                    }`}
-                    title="Restart from Start (3s Timer)"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Restart</span>
-                  </button>
+                  <Pause className="w-3.5 h-3.5 fill-current stroke-[2.5]" />
+                  <span>Pause</span>
                 </>
               ) : (
                 <>
-                  {/* Continue Sequential Button */}
-                  <button
-                    onClick={onContinue || onPlay}
-                    disabled={totalSteps === 0}
-                    className={`w-full lg:w-auto flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs transition active:scale-95 shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
-                      hasUnplayedSteps
-                        ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/30 ring-2 ring-emerald-400/60 animate-pulse'
-                        : isLight
-                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
-                        : 'bg-neutral-900 hover:bg-neutral-800 text-emerald-400 border border-neutral-700'
-                    }`}
-                    title="Continue tactic step-by-step from where the move stopped"
-                  >
-                    <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>Continue</span>
-                  </button>
-
-                  {/* Continue as Unit Button */}
-                  <button
-                    onClick={onContinueUnit || onPlayUnit}
-                    disabled={totalSteps === 0}
-                    className={`w-full lg:w-auto flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-black text-xs transition active:scale-95 shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
-                      hasUnplayedSteps
-                        ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sky-500/30 ring-2 ring-sky-400/60 animate-pulse'
-                        : isLight
-                        ? 'bg-slate-100 hover:bg-slate-200 text-sky-800 border-slate-300'
-                        : 'bg-neutral-900 hover:bg-neutral-800 text-sky-400 border border-neutral-700'
-                    }`}
-                    title="Continue tactic moving all players simultaneously as a unit from current position"
-                  >
-                    <Users className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>Continue Unit</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (isPlaying && playbackMode === 'sequential') {
-                        onPause();
-                      } else {
-                        onPlay();
-                      }
-                    }}
-                    disabled={totalSteps === 0}
-                    className={`w-full lg:w-auto flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs transition active:scale-95 border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
-                      isPlaying && playbackMode === 'sequential'
-                        ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30 ring-2 ring-amber-400/50'
-                        : isLight
-                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-                        : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
-                    }`}
-                    title={totalSteps === 0 ? "Drag players or ball on the pitch to record keyframes first" : "Play entire tactic from the start (3s Countdown)"}
-                  >
-                    {isPlaying && playbackMode === 'sequential' ? (
-                      <>
-                        <Pause className="w-3.5 h-3.5 fill-current stroke-[2.5]" />
-                        <span>Pause</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-3.5 h-3.5 fill-current stroke-[2.5]" />
-                        <span>Play All</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* Move as Unit Button */}
-                  <button
-                    onClick={() => {
-                      if (isPlaying && playbackMode === 'unit') {
-                        onPause();
-                      } else {
-                        onPlayUnit?.();
-                      }
-                    }}
-                    disabled={totalSteps === 0}
-                    className={`w-full lg:w-auto flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs transition active:scale-95 border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
-                      isPlaying && playbackMode === 'unit'
-                        ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30 ring-2 ring-amber-400/50'
-                        : isLight
-                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-                        : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
-                    }`}
-                    title={
-                      totalSteps === 0
-                        ? "Drag players or ball on the pitch to record positions first"
-                        : "Play entire tactic as a synchronized unit from the start (3s Countdown)"
-                    }
-                  >
-                    {isPlaying && playbackMode === 'unit' ? (
-                      <>
-                        <Pause className="w-3.5 h-3.5 fill-current stroke-[2.5]" />
-                        <span>Pause Unit</span>
-                      </>
-                    ) : (
-                      <>
-                        <Users className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>Unit All</span>
-                      </>
-                    )}
-                  </button>
+                  <Play className="w-3.5 h-3.5 fill-current stroke-[2] text-slate-400" />
+                  <span>Play All</span>
                 </>
               )}
-            </div>
+            </button>
 
-            {/* Secondary step & speed controls */}
-            <div className="flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 w-full sm:w-auto shrink-0">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => onSeekStep(Math.max(0, currentStepIndex - 1))}
-                  disabled={totalSteps === 0 || currentStepIndex === 0}
-                  className={`p-1.5 rounded-xl border disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer ${
-                    isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200' : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
-                  }`}
-                  title="Previous Step"
-                >
-                  <SkipBack className="w-3.5 h-3.5" />
-                </button>
-
-                <button
-                  onClick={() => onSeekStep(Math.min(totalSteps - 1, currentStepIndex + 1))}
-                  disabled={totalSteps === 0 || currentStepIndex >= totalSteps - 1}
-                  className={`p-1.5 rounded-xl border disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer ${
-                    isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200' : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
-                  }`}
-                  title="Next Step"
-                >
-                  <SkipForward className="w-3.5 h-3.5" />
-                </button>
-
-                <button
-                  onClick={onStop}
-                  disabled={totalSteps === 0}
-                  className={`flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl border text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer whitespace-nowrap ${
-                    isLight ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300' : 'bg-neutral-900 hover:bg-neutral-800 text-amber-300 border-neutral-800'
-                  }`}
-                  title="Reset to Step 0"
-                >
-                  <RotateCcw className="w-3 h-3 text-amber-400" />
-                  <span className="hidden sm:inline">Reset Start</span>
-                  <span className="inline sm:hidden">Reset</span>
-                </button>
-              </div>
-
-              {/* Playback Speed Controller */}
-              <div className={`flex items-center p-0.5 sm:p-1 rounded-xl border gap-0.5 ${
-                isLight ? 'bg-slate-100 border-slate-300' : 'bg-neutral-900 border-neutral-800'
-              }`} title="Control Tactic Animation Speed">
-                <SpeedGaugeSvg className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ml-0.5 sm:ml-1 mr-0.5 shrink-0 ${isLight ? 'text-slate-500' : 'text-neutral-400'}`} />
-                {[0.5, 1.0, 1.5, 2.0].map((spd) => (
-                  <button
-                    key={spd}
-                    onClick={() => onChangeSpeed(spd)}
-                    className={`px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-[11px] font-bold font-mono transition cursor-pointer ${
-                      playbackSpeed === spd
-                        ? isLight
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm font-black'
-                          : 'bg-neutral-800 text-emerald-400 border border-neutral-700 shadow-sm font-black'
-                        : isLight
-                        ? 'text-slate-600 hover:text-slate-900'
-                        : 'text-neutral-400 hover:text-neutral-200'
-                    }`}
-                    title={`Set speed to ${spd}x`}
-                  >
-                    {spd}x
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Status */}
-          <div className="flex items-center gap-2 font-mono text-xs">
-            <span className={isLight ? "text-slate-600 font-bold" : "text-neutral-400"}>
-              {totalSteps > 0 ? (
-                <>Step <strong className={isLight ? "text-emerald-700" : "text-emerald-400"}>{currentStepIndex + 1}</strong> of <strong>{totalSteps}</strong></>
+            {/* Move as Unit Button */}
+            <button
+              onClick={() => {
+                if (isPlaying && playbackMode === 'unit') {
+                  onPause();
+                } else {
+                  onPlayUnit?.();
+                }
+              }}
+              disabled={totalSteps === 0}
+              className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition active:scale-95 border cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${
+                isPlaying && playbackMode === 'unit'
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30 ring-1 ring-amber-400/50 border-amber-400'
+                  : isLight
+                  ? 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200 shadow-xs'
+                  : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border-neutral-800'
+              }`}
+              title={
+                totalSteps === 0
+                  ? "Drag players or ball on the pitch to record positions first"
+                  : "Play entire tactic as a synchronized unit from the start (3s Countdown)"
+              }
+            >
+              {isPlaying && playbackMode === 'unit' ? (
+                <>
+                  <Pause className="w-3.5 h-3.5 fill-current stroke-[2.5]" />
+                  <span>Pause Unit</span>
+                </>
               ) : (
-                '0 Steps'
+                <>
+                  <Users className="w-3.5 h-3.5 stroke-[2.5] text-slate-400" />
+                  <span>Unit All</span>
+                </>
               )}
-            </span>
+            </button>
+          </>
+        )}
 
-            {totalSteps > 0 && (
-              <button
-                onClick={onClearSteps}
-                className={`p-1.5 rounded-lg border transition cursor-pointer ${
-                  isLight ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200' : 'bg-neutral-900 hover:bg-rose-950/50 text-neutral-400 hover:text-rose-400 border-neutral-800'
-                }`}
-                title="Clear All Keyframes"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            )}
-          </div>
+        {/* Step Navigation buttons */}
+        <button
+          onClick={() => onSeekStep(Math.max(0, currentStepIndex - 1))}
+          disabled={totalSteps === 0 || currentStepIndex === 0}
+          className={`p-1.5 rounded-xl border disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer ${
+            isLight ? 'bg-white hover:bg-slate-50 text-slate-500 border-slate-200 shadow-xs' : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border-neutral-800'
+          }`}
+          title="Previous Step"
+        >
+          <SkipBack className="w-3.5 h-3.5" />
+        </button>
+
+        <button
+          onClick={() => onSeekStep(Math.min(totalSteps - 1, currentStepIndex + 1))}
+          disabled={totalSteps === 0 || currentStepIndex >= totalSteps - 1}
+          className={`p-1.5 rounded-xl border disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer ${
+            isLight ? 'bg-white hover:bg-slate-50 text-slate-500 border-slate-200 shadow-xs' : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border-neutral-800'
+          }`}
+          title="Next Step"
+        >
+          <SkipForward className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Reset Start */}
+        <button
+          onClick={onStop}
+          disabled={totalSteps === 0}
+          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer whitespace-nowrap ${
+            isLight ? 'bg-amber-50/90 hover:bg-amber-100 text-amber-800 border-amber-300 shadow-xs' : 'bg-neutral-900 hover:bg-neutral-800 text-amber-300 border-neutral-800'
+          }`}
+          title="Reset to Step 0"
+        >
+          <RotateCcw className="w-3.5 h-3.5 text-amber-500" />
+          <span>Reset Start</span>
+        </button>
+
+        {/* Speed Controller Pill */}
+        <div className={`flex items-center px-1.5 py-1 rounded-xl border gap-0.5 ${
+          isLight ? 'bg-slate-100/90 border-slate-200' : 'bg-neutral-900 border-neutral-800'
+        }`} title="Control Tactic Animation Speed">
+          <SpeedGaugeSvg className={`w-3.5 h-3.5 mr-0.5 shrink-0 ${isLight ? 'text-slate-500' : 'text-neutral-400'}`} />
+          {[0.5, 1.0, 1.5, 2.0].map((spd) => (
+            <button
+              key={spd}
+              onClick={() => onChangeSpeed(spd)}
+              className={`px-1.5 py-0.5 rounded-lg text-[11px] font-bold font-mono transition cursor-pointer ${
+                playbackSpeed === spd
+                  ? isLight
+                    ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-xs font-black'
+                    : 'bg-neutral-800 text-emerald-400 border border-neutral-700 shadow-sm font-black'
+                  : isLight
+                  ? 'text-slate-600 hover:text-slate-900'
+                  : 'text-neutral-400 hover:text-neutral-200'
+              }`}
+              title={`Set speed to ${spd}x`}
+            >
+              {spd === 1 ? '1x' : `${spd}x`}
+            </button>
+          ))}
         </div>
 
-        {/* Timeline Bar */}
-        {totalSteps > 0 && (
-          <div className={`relative w-full h-2 rounded-full border overflow-hidden ${
-            isLight ? 'bg-slate-200 border-slate-300' : 'bg-neutral-900 border-neutral-800'
-          }`}>
-            <div
-              className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-75"
-              style={{ width: `${Math.max(0, Math.min(100, overallProgress * 100))}%` }}
-            />
-          </div>
-        )}
+        {/* Right Steps Counter / Clear */}
+        <div className="flex items-center gap-1.5 font-mono text-xs pl-1">
+          <span className={isLight ? "text-slate-600 font-bold whitespace-nowrap" : "text-neutral-400 whitespace-nowrap"}>
+            {totalSteps} Steps
+          </span>
+
+          {totalSteps > 0 && (
+            <button
+              onClick={onClearSteps}
+              className={`p-1 rounded-lg border transition cursor-pointer ${
+                isLight ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200' : 'bg-neutral-900 hover:bg-rose-950/50 text-neutral-400 hover:text-rose-400 border-neutral-800'
+              }`}
+              title="Clear All Keyframes"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          )}
+        </div>
       </div>
     );
   }
 
-  // Full Executive Keyframes Studio & Timeline Panel
+  // Full Executive Keyframes Studio & Timeline Panel (Normal View)
   return (
-    <div className={`w-full backdrop-blur-2xl rounded-2xl border p-4 sm:p-5 flex flex-col gap-3.5 transition-all ${
+    <div className={`w-full backdrop-blur-2xl rounded-2xl border p-3.5 sm:p-4 md:p-5 flex flex-col gap-3.5 transition-all ${
       isLight ? 'bg-white border-slate-200 text-slate-900 shadow-xl shadow-slate-200/50' : 'bg-black border-neutral-800 text-white shadow-2xl'
     }`}>
       {/* Top Header: Studio Title, Keyframe Counter Badge & Auto-Record Status */}
@@ -472,7 +446,7 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
             </div>
             <p className={`text-[11px] sm:text-xs flex items-center gap-1.5 mt-0.5 ${isLight ? 'text-slate-500' : 'text-neutral-400'}`}>
               <LiveRadarSvg className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-              <span>Auto-records movements when you drag &amp; release players or ball on the board</span>
+              <span>Auto-records movements when you pass to players or drag &amp; release on the board</span>
             </p>
           </div>
         </div>
@@ -515,7 +489,7 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
       <div className={`w-full flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2.5 sm:gap-3 p-2.5 sm:p-3 md:p-3.5 rounded-2xl border shadow-sm ${subPanelBg}`}>
         {/* Playback Triggers & Step Controls */}
         <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full xl:w-auto">
-          {/* Primary Action Buttons (2-col grid on mobile, 4-col on tablets, inline flex on desktop) */}
+          {/* Primary Action Buttons */}
           <div className="grid grid-cols-2 sm:grid-cols-4 xl:flex xl:items-center gap-2 w-full sm:w-auto">
             {status === 'paused' ? (
               <>
@@ -820,7 +794,7 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
         </div>
       </div>
 
-      {/* Recorded Keyframe Steps Cards List / Carousel */}
+      {/* Recorded Keyframe Steps Cards List / Organized Chronological Flow */}
       <div className="w-full flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -831,7 +805,7 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
           </div>
           {totalSteps > 0 && (
             <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-neutral-400'}`}>
-              Click any step card to jump &amp; preview on the board
+              Click any step card to preview on the pitch &bull; Use arrows to reorder
             </span>
           )}
         </div>
@@ -870,7 +844,7 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
             )}
           </div>
         ) : (
-          /* Step Cards Horizontal Scroll Track / Grid */
+          /* Step Cards Organized Grid with Reordering & Clean Flow */
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 max-h-[340px] overflow-y-auto pr-1">
             {steps.map((step, idx) => {
               const isActive = idx === currentStepIndex;
@@ -885,46 +859,76 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                   className={`group relative p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 select-none shadow-sm ${
                     isActive
                       ? isLight
-                        ? 'bg-amber-50/90 border-amber-500 ring-2 ring-amber-400/80 shadow-md scale-[1.02]'
-                        : 'bg-gradient-to-br from-amber-500/20 via-neutral-900 to-neutral-950 border-amber-400 ring-2 ring-amber-400/60 shadow-amber-950/40 scale-[1.02]'
+                        ? 'bg-amber-50/90 border-amber-400 ring-2 ring-amber-400/80 shadow-md scale-[1.02]'
+                        : 'bg-amber-500/10 border-amber-400/80 ring-2 ring-amber-400/60 shadow-lg shadow-amber-500/10 scale-[1.02]'
                       : isLight
-                      ? 'bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-900'
-                      : 'bg-neutral-900 border-neutral-800 hover:bg-neutral-850 hover:border-neutral-700 text-white'
+                      ? 'bg-slate-50/80 hover:bg-slate-100/90 border-slate-200 text-slate-800'
+                      : 'bg-neutral-900/60 hover:bg-neutral-900 border-neutral-800 text-neutral-200'
                   }`}
                 >
-                  {/* Step Header: Step Order Badge & Delete Button */}
-                  <div className="flex items-center justify-between w-full">
+                  {/* Card Header: Step Index & Action Type */}
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <span className={`text-[10px] font-mono font-black px-2 py-0.5 rounded-lg border ${
+                      <span className={`px-2 py-0.5 rounded-md font-mono text-[10px] font-black ${
                         isActive
-                          ? 'bg-amber-400 text-slate-950 border-amber-300 font-extrabold'
+                          ? 'bg-amber-400 text-slate-950 shadow-sm'
                           : isLight
-                          ? 'bg-slate-100 text-emerald-800 border-slate-300'
-                          : 'bg-neutral-950 text-emerald-400 border-neutral-700'
+                          ? 'bg-slate-200 text-slate-700'
+                          : 'bg-neutral-800 text-emerald-400'
                       }`}>
-                        STEP #{idx + 1}
+                        #{idx + 1}
                       </span>
-                      {isActive && (
-                        <span className={`text-[9px] font-extrabold uppercase tracking-wide animate-pulse ${
-                          isLight ? 'text-amber-800' : 'text-amber-300'
-                        }`}>
-                          Active
-                        </span>
-                      )}
+                      <span className={`text-[10px] font-mono ${isActive ? (isLight ? 'text-amber-800 font-bold' : 'text-amber-300 font-bold') : (isLight ? 'text-slate-500' : 'text-neutral-400')}`}>
+                        Step {idx + 1}
+                      </span>
                     </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveStep(idx);
-                      }}
-                      className={`p-1 rounded-lg transition opacity-80 group-hover:opacity-100 cursor-pointer ${
-                        isLight ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50' : 'text-neutral-500 hover:text-rose-400 hover:bg-rose-950/30'
-                      }`}
-                      title="Delete this step"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {/* Step Reorder & Delete controls */}
+                    <div className="flex items-center gap-0.5">
+                      {onReorderSteps && (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (idx > 0) onReorderSteps(idx, idx - 1);
+                            }}
+                            disabled={idx === 0}
+                            className={`p-0.5 rounded disabled:opacity-20 hover:text-emerald-500 transition cursor-pointer ${
+                              isLight ? 'text-slate-400' : 'text-neutral-500'
+                            }`}
+                            title="Move Earlier in Sequence"
+                          >
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (idx < steps.length - 1) onReorderSteps(idx, idx + 1);
+                            }}
+                            disabled={idx === steps.length - 1}
+                            className={`p-0.5 rounded disabled:opacity-20 hover:text-emerald-500 transition cursor-pointer ${
+                              isLight ? 'text-slate-400' : 'text-neutral-500'
+                            }`}
+                            title="Move Later in Sequence"
+                          >
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveStep(idx);
+                        }}
+                        className={`p-1 rounded-lg transition opacity-80 group-hover:opacity-100 cursor-pointer ${
+                          isLight ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50' : 'text-neutral-500 hover:text-rose-400 hover:bg-rose-950/30'
+                        }`}
+                        title="Delete this step"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Actor Details: Player or Ball with crisp SVG */}
@@ -968,7 +972,7 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
                           </span>
                         ) : step.carriedBall ? (
                           <span className={isLight ? "text-amber-800 font-semibold flex items-center gap-1" : "text-amber-300 font-semibold flex items-center gap-1"}>
-                            <SoccerBallSvg className="w-3 h-3" />
+                            <SoccerBallSvg className="w-3.5 h-3.5" />
                             <span>Dribbling with Ball</span>
                           </span>
                         ) : (
@@ -1017,4 +1021,3 @@ const KeyframesRecordedStudioComponent: React.FC<KeyframesRecordedStudioProps> =
 };
 
 export const KeyframesRecordedStudio = React.memo(KeyframesRecordedStudioComponent);
-

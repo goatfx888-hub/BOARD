@@ -273,6 +273,26 @@ export class TacticAnimator {
   }
 
   /**
+   * Reorder a step from one index to another
+   */
+  public reorderSteps(fromIndex: number, toIndex: number): void {
+    if (
+      fromIndex >= 0 &&
+      fromIndex < this.steps.length &&
+      toIndex >= 0 &&
+      toIndex < this.steps.length &&
+      fromIndex !== toIndex
+    ) {
+      const [moved] = this.steps.splice(fromIndex, 1);
+      this.steps.splice(toIndex, 0, moved);
+      this.steps.forEach((step, i) => {
+        step.order = i;
+      });
+      this.emitState();
+    }
+  }
+
+  /**
    * Clear all recorded steps and reset playback
    */
   public clearSteps(): void {
