@@ -8,6 +8,7 @@ import { PitchExportModal } from './components/PitchExportModal';
 import { PlayerNamerModal } from './components/PlayerNamerModal';
 import { PRESET_SQUADS } from './data/presetSquads';
 import { getFormationById } from './data/formations';
+import { getRandomKitPair } from './utils/kitThemes';
 import { Shield, SlidersHorizontal, Maximize2, Minimize2, X } from 'lucide-react';
 import { LandingPage } from './components/LandingPage';
 import { TransitionGraphic } from './components/TransitionGraphic';
@@ -31,8 +32,21 @@ export default function App() {
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState<LegalTabType>('privacy');
 
-  const [homeSquad, setHomeSquad] = useState<SquadData>(PRESET_SQUADS[0]);
-  const [awaySquad, setAwaySquad] = useState<SquadData>(PRESET_SQUADS[1]);
+  // Dynamic starting kit themes so the board never opens fixed only on white and red
+  const [homeSquad, setHomeSquad] = useState<SquadData>(() => {
+    const pair = getRandomKitPair();
+    return {
+      ...PRESET_SQUADS[0],
+      kit: { ...pair.homeKit },
+    };
+  });
+  const [awaySquad, setAwaySquad] = useState<SquadData>(() => {
+    const pair = getRandomKitPair();
+    return {
+      ...PRESET_SQUADS[1],
+      kit: { ...pair.awayKit },
+    };
+  });
   const [matchMode, setMatchMode] = useState<'home_vs_away' | 'home_only' | 'away_only'>('home_vs_away');
   const [activeTeam, setActiveTeam] = useState<'home' | 'away'>('home');
   const [showNames, setShowNames] = useState(false);
@@ -89,6 +103,17 @@ export default function App() {
 
   // --- CTA Launch from Landing Page with Motion Graphic ---
   const handleLaunchBoard = (presetName?: string) => {
+    // Pick fresh, contrasting kit colors every time user enters the board
+    const newKitPair = getRandomKitPair();
+    setHomeSquad((prev) => ({
+      ...prev,
+      kit: { ...newKitPair.homeKit },
+    }));
+    setAwaySquad((prev) => ({
+      ...prev,
+      kit: { ...newKitPair.awayKit },
+    }));
+
     // On computer/laptop, ensure the tactical board always opens in horizontal orientation
     if (typeof window !== 'undefined' && window.innerWidth >= 768) {
       setOrientation('horizontal');

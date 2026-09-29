@@ -1770,8 +1770,8 @@ const PitchComponent: React.FC<PitchProps> = ({
                 >
                   {/* Realistic Ground Shadow */}
                   <div
-                    className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 sm:w-5 md:w-7 h-1.5 sm:h-2 bg-slate-950/80 rounded-full blur-[2px] transform transition-all ${
-                      isPassing ? 'scale-x-140 scale-y-50 opacity-60 translate-y-0.5' : 'scale-y-80 group-hover/ball:scale-125'
+                    className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-3.5 sm:w-4 md:w-6 h-1.5 bg-slate-950/80 rounded-full blur-[1.5px] transform transition-all ${
+                      isPassing ? 'opacity-50' : 'opacity-70'
                     }`}
                   />
 
@@ -1784,9 +1784,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                           : `rotate(${ballRotation}deg)`,
                       transition: isPassing ? 'transform 0.65s cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
                     }}
-                    className={`relative transition-transform duration-150 active:scale-95 filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.7)] ${
-                      isPassing ? 'scale-125' : 'group-hover/ball:scale-115'
-                    } w-[19px] h-[19px] sm:w-[24px] sm:h-[24px] md:w-[26px] md:h-[26px] lg:w-[28px] lg:h-[28px]`}
+                    className="relative transition-transform duration-150 filter drop-shadow-[0_3px_8px_rgba(0,0,0,0.6)] w-[18px] h-[18px] sm:w-[22px] sm:h-[22px] md:w-[24px] md:h-[24px] lg:w-[26px] lg:h-[26px]"
                   >
                     <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
                       <defs>
