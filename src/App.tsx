@@ -100,6 +100,12 @@ export default function App() {
       setAwaySquad(newSquad);
     }
     setSelectedPlayerId(null);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        setMobileView('pitch');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 120);
+    }
   };
 
   // --- CTA Launch from Landing Page with Motion Graphic ---
@@ -192,6 +198,14 @@ export default function App() {
       },
       startingXI: updatedStartingXI,
     }));
+
+    // On mobile devices, automatically switch to pitch view when user selects a tactic
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        setMobileView('pitch');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 120);
+    }
   };
 
   // --- Swap Players (Pitch to Pitch, or Pitch to Bench) ---
