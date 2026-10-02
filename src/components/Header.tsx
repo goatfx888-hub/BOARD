@@ -6,6 +6,7 @@ import {
   SvgExportTactical,
   SvgDarkModePro,
   SvgLightModePro,
+  SvgPitchStadiumIcon,
 } from './LandingSvgIcons';
 import {
   Layers,
@@ -310,6 +311,82 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* POD 4: TACTICAL TOOLS & OPTIONS */}
           <div className="flex items-center gap-1.5 xl:gap-2 shrink-0">
+            {/* Dedicated Pitches Surface Selector Dropdown with Stadium Icon */}
+            <div className="relative shrink-0" ref={textureDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsTextureDropdownOpen((prev) => !prev)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs border transition active:scale-95 shadow-sm cursor-pointer ${
+                  isTextureDropdownOpen
+                    ? isLight
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300 ring-1 ring-emerald-400/40 shadow-sm'
+                      : 'bg-neutral-800 text-emerald-400 border-neutral-700 ring-1 ring-emerald-500/40 shadow-sm'
+                    : isLight
+                    ? 'bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border-slate-200 hover:border-emerald-300'
+                    : 'bg-neutral-900/90 hover:bg-neutral-800 text-neutral-300 hover:text-emerald-400 border-neutral-800 hover:border-emerald-500/40'
+                }`}
+                title="Choose Pitch Turf & Stadium Surface"
+              >
+                <SvgPitchStadiumIcon className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="hidden sm:inline">Pitches</span>
+                <span className={`w-2 h-2 rounded-full shrink-0 ${currentTextureObj.previewBg}`} />
+                <ChevronDown
+                  className={`w-3 h-3 text-neutral-400 transition-transform duration-200 ${
+                    isTextureDropdownOpen ? 'rotate-180 text-emerald-400' : ''
+                  }`}
+                />
+              </button>
+
+              {/* Pitch Selector Dropdown Card */}
+              {isTextureDropdownOpen && (
+                <div
+                  className="absolute right-0 top-full mt-2 w-[280px] rounded-2xl bg-[#121517] border border-neutral-800/90 shadow-[0_20px_50px_rgba(0,0,0,0.85)] p-2.5 z-[160] backdrop-blur-2xl flex flex-col gap-1.5 animate-in fade-in zoom-in-95 duration-150 text-white select-none text-left"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between px-2 py-1.5 border-b border-neutral-800/80">
+                    <div className="flex items-center gap-2">
+                      <SvgPitchStadiumIcon className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="text-[11px] font-black uppercase tracking-wider text-neutral-200">
+                        Pitch Turf Surfaces
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-400">
+                      11 Styles
+                    </span>
+                  </div>
+
+                  <div className="max-h-64 overflow-y-auto custom-scrollbar flex flex-col gap-1 pr-1">
+                    {PITCH_TEXTURE_OPTIONS.map((opt) => {
+                      const isSelected = opt.id === texture;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            onChangeTexture(opt.id);
+                            setIsTextureDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition text-left cursor-pointer ${
+                            isSelected
+                              ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/50 shadow-sm'
+                              : 'text-neutral-300 hover:bg-neutral-800/80 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 truncate">
+                            <span
+                              className={`w-3.5 h-3.5 rounded-full border border-slate-400/50 shrink-0 ${opt.previewBg}`}
+                            />
+                            <span className="truncate">{opt.name}</span>
+                          </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Tactical Drawing Tools Toggle */}
             <button
               type="button"
@@ -486,7 +563,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-[10px] font-black tracking-wider text-neutral-400 uppercase">
-                        <Layers className="w-3.5 h-3.5 text-emerald-400" />
+                        <SvgPitchStadiumIcon className="w-4 h-4 text-emerald-400 shrink-0" />
                         <span>PITCH &amp; STADIUM TURF</span>
                       </div>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 truncate max-w-[170px]">
@@ -502,7 +579,7 @@ export const Header: React.FC<HeaderProps> = ({
                         className="w-full py-2.5 px-3 rounded-xl bg-neutral-800/80 hover:bg-neutral-700/80 border border-neutral-700/60 text-xs font-bold flex items-center justify-between text-neutral-200 transition cursor-pointer"
                       >
                         <div className="flex items-center gap-2.5 truncate">
-                          <Layers className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                          <SvgPitchStadiumIcon className="w-4 h-4 text-emerald-400 shrink-0" />
                           <span className={`w-3.5 h-3.5 rounded-full border border-slate-400/50 shrink-0 ${currentTextureObj.previewBg}`} />
                           <span className="truncate">{currentTextureObj.name}</span>
                         </div>
@@ -1017,7 +1094,7 @@ export const Header: React.FC<HeaderProps> = ({
                   isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
                 }`}
               >
-                <Layers className="w-4 h-4 text-emerald-500 shrink-0" />
+                <SvgPitchStadiumIcon className="w-4 h-4 text-emerald-500 shrink-0" />
                 <select
                   value={texture}
                   onChange={(e) => onChangeTexture(e.target.value as PitchTexture)}

@@ -551,3 +551,99 @@ export const SvgLightModePro: React.FC<SvgProps> = ({ className = 'w-4 h-4', siz
     />
   </svg>
 );
+
+// 16. Official Stadium Arena / Pitches Option Vector Icon (Matches user stadium icon)
+export const SvgPitchStadiumIcon: React.FC<SvgProps> = ({ className = 'w-5 h-5', size }) => (
+  <svg
+    viewBox="0 0 100 100"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    width={size}
+    height={size}
+  >
+    {/* Far-Left Flag (waving left) */}
+    <path d="M 9 27 L 9 19 L 1 22.5 L 9 26 Z" fill="currentColor" />
+    <path d="M 9 19 L 9 32" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+
+    {/* Top-Left Flag (waving left) */}
+    <path d="M 34 16 L 34 8 L 26 11.5 L 34 15 Z" fill="currentColor" />
+    <path d="M 34 8 L 34 21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+
+    {/* Top-Right Flag (waving right) */}
+    <path d="M 66 16 L 66 8 L 74 11.5 L 66 15 Z" fill="currentColor" />
+    <path d="M 66 8 L 66 21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+
+    {/* Far-Right Flag (waving right) */}
+    <path d="M 91 27 L 91 19 L 99 22.5 L 91 26 Z" fill="currentColor" />
+    <path d="M 91 19 L 91 32" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+
+    {/* Top Stadium Outer Elliptical Rim (Stadium Bowl Upper Edge) */}
+    <ellipse
+      cx="50"
+      cy="35"
+      rx="44"
+      ry="21"
+      stroke="currentColor"
+      strokeWidth="5"
+      fill="none"
+    />
+
+    {/* Bowl Section Dividing Lines (Stands Tiers) */}
+    {/* Back-left tier spoke */}
+    <path d="M 34 22 L 41 38" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" />
+    {/* Back-right tier spoke */}
+    <path d="M 66 22 L 59 38" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" />
+    {/* Front-left tier spoke */}
+    <path d="M 17 44 L 28 47" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" />
+    {/* Front-right tier spoke */}
+    <path d="M 83 44 L 72 47" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" />
+
+    {/* Central Playing Field (Solid Pitch Oval in the Middle) */}
+    <ellipse cx="50" cy="46" rx="26" ry="12.5" fill="currentColor" />
+
+    {/* Lower Stadium Outer Wall & Façade Structure */}
+    {/* Mid Horizontal Ring */}
+    <path
+      d="M 6 42 C 6 62, 94 62, 94 42"
+      stroke="currentColor"
+      strokeWidth="5"
+      fill="none"
+      strokeLinecap="round"
+    />
+
+    {/* Bottom Base Outline & Arched Entrance Portal */}
+    <path
+      d="M 6 42 C 4 60, 10 74, 37 83 L 34 72 C 35 69, 41 67, 50 67 C 59 67, 65 69, 66 72 L 63 83 C 90 74, 96 60, 94 42"
+      stroke="currentColor"
+      strokeWidth="5"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      fill="none"
+    />
+
+    {/* Inner Arched Tunnel Edge */}
+    <path
+      d="M 34 72 C 35 69, 41 67, 50 67 C 59 67, 65 69, 66 72"
+      stroke="currentColor"
+      strokeWidth="4"
+      fill="none"
+      strokeLinecap="round"
+    />
+
+    {/* Vertical Pillars / Grid Windows on Stadium Exterior Wall */}
+    {/* Left Exterior Pillar */}
+    <path d="M 15 48 L 16 68" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    {/* Mid-Left Exterior Pillar */}
+    <path d="M 27 53 L 28 74" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    {/* Mid-Right Exterior Pillar */}
+    <path d="M 73 53 L 72 74" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    {/* Right Exterior Pillar */}
+    <path d="M 85 48 L 84 68" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+
+    {/* Front Arch Entrance Vertical Posts */}
+    <path d="M 36 71 L 38 82" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" />
+    <path d="M 64 71 L 62 82" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" />
+  </svg>
+);
+
