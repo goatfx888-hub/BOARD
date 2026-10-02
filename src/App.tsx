@@ -12,6 +12,7 @@ import { getRandomKitPair } from './utils/kitThemes';
 import { Shield, SlidersHorizontal, Maximize2, Minimize2, X } from 'lucide-react';
 import { LandingPage } from './components/LandingPage';
 import { TransitionGraphic } from './components/TransitionGraphic';
+import { TacticalBoardBackground } from './components/TacticalBoardBackground';
 import { LegalModal, LegalTabType } from './components/LegalModal';
 import {
   SquadData,
@@ -577,10 +578,14 @@ export default function App() {
   }, []);
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
-      isLight
-        ? 'bg-slate-100 text-slate-900 selection:bg-emerald-500 selection:text-white'
-        : 'bg-black text-slate-100 selection:bg-emerald-500 selection:text-slate-950'
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 relative ${
+      currentView === 'landing'
+        ? (isLight
+            ? 'bg-slate-100 text-slate-900 selection:bg-emerald-500 selection:text-white'
+            : 'bg-black text-slate-100 selection:bg-emerald-500 selection:text-slate-950')
+        : (isLight
+            ? 'bg-slate-200/50 text-slate-900 selection:bg-emerald-500 selection:text-white'
+            : 'bg-black/40 text-slate-100 selection:bg-emerald-500 selection:text-slate-950')
     }`}>
       {/* Landing Home Page View */}
       {currentView === 'landing' ? (
@@ -590,6 +595,9 @@ export default function App() {
         />
       ) : (
         <>
+          {/* Dynamic Professional Background for Tactical Workspace */}
+          <TacticalBoardBackground />
+
           {/* Top Controls Header */}
           <Header
             squad={homeSquad}
