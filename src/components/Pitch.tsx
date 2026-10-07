@@ -1756,9 +1756,11 @@ const PitchComponent: React.FC<PitchProps> = ({
                     position: 'absolute',
                     left: `${activeBallPos.x}%`,
                     top: `${activeBallPos.y}%`,
-                    transform: 'translate(-50%, -50%)',
+                    transform: 'translate3d(-50%, -50%, 0)',
                     zIndex: isDraggingBall ? 65 : isPassing ? 55 : 35,
-                    willChange: isDraggingBall || isAnimating ? 'left, top' : 'auto',
+                    willChange: isDraggingBall || isAnimating ? 'left, top, transform' : 'auto',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
                     transition: isDraggingBall || isAnimating
                       ? 'none'
                       : isPassing
@@ -1923,10 +1925,12 @@ const PitchComponent: React.FC<PitchProps> = ({
                     position: 'absolute',
                     left: `${xPos}%`,
                     top: `${yPos}%`,
-                    transform: `translate(-50%, -50%) ${!isVisible ? 'scale(0.85)' : isBeingDragged ? 'scale(1.08)' : 'scale(1)'}`,
+                    transform: `translate3d(-50%, -50%, 0) ${!isVisible ? 'scale(0.85)' : isBeingDragged ? 'scale(1.08)' : 'scale(1)'}`,
                     opacity: isVisible ? 1 : 0,
                     pointerEvents: !isVisible || (isDrawingMode && activeTool !== 'hand' && activeTool !== 'select') ? 'none' : 'auto',
-                    willChange: isBeingDragged || isAnimating ? 'left, top' : 'left, top, opacity, transform',
+                    willChange: isBeingDragged || isAnimating ? 'left, top, transform' : 'auto',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
                     transition: isBeingDragged || isAnimating
                       ? 'none'
                       : 'left 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease-out, transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1)',
@@ -1934,7 +1938,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                   }}
                   className={`player-card-token touch-none select-none cursor-grab active:cursor-grabbing relative ${
                     isBeingDragged
-                      ? 'drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] ring-2 ring-white rounded-full'
+                      ? 'drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]'
                       : ''
                   }`}
                 >
@@ -1987,10 +1991,12 @@ const PitchComponent: React.FC<PitchProps> = ({
                       position: 'absolute',
                       left: `${xPos}%`,
                       top: `${yPos}%`,
-                      transform: `translate(-50%, -50%) ${!isVisible ? 'scale(0.85)' : isBeingDragged ? 'scale(1.08)' : 'scale(1)'}`,
+                      transform: `translate3d(-50%, -50%, 0) ${!isVisible ? 'scale(0.85)' : isBeingDragged ? 'scale(1.08)' : 'scale(1)'}`,
                       opacity: isVisible ? 1 : 0,
                       pointerEvents: !isVisible || (isDrawingMode && activeTool !== 'hand' && activeTool !== 'select') ? 'none' : 'auto',
-                      willChange: isBeingDragged || isAnimating ? 'left, top' : 'left, top, opacity, transform',
+                      willChange: isBeingDragged || isAnimating ? 'left, top, transform' : 'auto',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
                       transition: isBeingDragged || isAnimating
                         ? 'none'
                         : 'left 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), top 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.32s ease-out, transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1)',
@@ -1998,7 +2004,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                     }}
                     className={`player-card-token touch-none select-none cursor-grab active:cursor-grabbing relative ${
                       isBeingDragged
-                        ? 'drop-shadow-[0_8px_16px_rgba(244,63,94,0.8)] ring-2 ring-rose-400 rounded-full'
+                        ? 'drop-shadow-[0_8px_16px_rgba(244,63,94,0.8)]'
                         : ''
                     }`}
                   >

@@ -1111,23 +1111,22 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               {/* Display Labels row */}
-              <div>
+              <div className="flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={onOpenPlayerNamer || onToggleShowNames}
-                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer ${
-                    showNames
-                      ? isLight
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                        : 'bg-neutral-900 text-emerald-400 border-emerald-500/40'
-                      : isLight
-                      ? 'bg-white text-slate-700 border-slate-200'
-                      : 'bg-neutral-900 text-neutral-300 border-neutral-800'
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenPlayerNamer?.();
+                  }}
+                  className={`w-full py-2.5 px-3.5 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-95 ${
+                    isLight
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-emerald-500/20'
+                      : 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-emerald-500/20'
                   }`}
                   title="Customize player names and shirt numbers"
                 >
-                  <Hash className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span>Customize Names &amp; Numbers</span>
+                  <Hash className="w-4 h-4 text-slate-950 shrink-0 stroke-[2.5]" />
+                  <span>Edit Player Names &amp; Numbers</span>
                 </button>
               </div>
             </div>

@@ -167,9 +167,17 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData((prev) => ({
+                    ...prev,
+                    name: val,
+                    shortName: prev.shortName === prev.name || !prev.shortName ? val : prev.shortName,
+                  }));
+                }}
                 required
                 className={inputClass}
+                placeholder="e.g. Kylian Mbappé"
               />
             </div>
             <div>
@@ -180,6 +188,7 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, shortName: e.target.value })}
                 required
                 className={inputClass}
+                placeholder="e.g. Mbappé"
               />
             </div>
           </div>

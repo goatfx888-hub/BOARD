@@ -40,10 +40,10 @@ const PlayerCardComponent: React.FC<PlayerCardProps> = ({
 
   const nameBannerWidth =
     size === 'sm'
-      ? 'max-w-[56px] sm:max-w-[62px] md:max-w-[70px] lg:max-w-[76px]'
+      ? 'max-w-[68px] sm:max-w-[76px] md:max-w-[86px] lg:max-w-[94px]'
       : size === 'lg'
-      ? 'max-w-[70px] sm:max-w-[80px] md:max-w-[90px] lg:max-w-[100px]'
-      : 'max-w-[60px] sm:max-w-[68px] md:max-w-[76px] lg:max-w-[84px]';
+      ? 'max-w-[84px] sm:max-w-[96px] md:max-w-[108px] lg:max-w-[120px]'
+      : 'max-w-[76px] sm:max-w-[86px] md:max-w-[96px] lg:max-w-[106px]';
 
   return (
     <div
@@ -51,18 +51,18 @@ const PlayerCardComponent: React.FC<PlayerCardProps> = ({
       onDoubleClick={onDoubleClick}
       className={`group relative flex flex-col items-center cursor-pointer select-none touch-none transition-[filter] duration-200 ease-out ${
         isSelected
-          ? 'z-30 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]'
+          ? 'z-30 drop-shadow-[0_6px_14px_rgba(0,0,0,0.6)]'
           : 'hover:z-20'
       }`}
     >
       {/* Jersey / Avatar Token Container */}
-      <div className="relative flex items-center justify-center">
+      <div className="relative flex items-center justify-center [backface-visibility:hidden] [transform:translate3d(0,0,0)]">
         {/* Custom Shirt Graphic Icon or Uploaded Player Avatar */}
         <div
-          className={`relative flex items-center justify-center rounded-full border-2 shadow-md transition-[border-color,box-shadow] duration-200 ease-out overflow-hidden ${tokenDimensions} ${
+          className={`relative flex items-center justify-center rounded-full border shadow-md transition-[border-color,box-shadow,transform] duration-200 ease-out overflow-hidden ${tokenDimensions} ${
             isSelected
-              ? 'border-white ring-2 ring-white/90 shadow-lg ring-offset-1 ring-offset-black/40'
-              : 'border-white/90 group-hover:border-white'
+              ? 'border-white shadow-md'
+              : 'border-white/80 group-hover:border-white'
           }`}
           style={{
             background: player.avatarUrl
@@ -111,19 +111,24 @@ const PlayerCardComponent: React.FC<PlayerCardProps> = ({
         </div>
       </div>
 
-      {/* Name Tag Banner */}
-      {showName && (
+      {/* Modern Broadcast Style Player Name Banner */}
+      {showName && Boolean(player.shortName || player.name) && (
         <div
-          className={`mt-0.5 ${nameBannerWidth} px-1 py-0.2 sm:px-1.5 sm:py-0.5 rounded sm:rounded-md shadow-md text-center border backdrop-blur-md transition-[background-color,border-color,color] duration-200 ease-out ${
+          className={`mt-0.5 sm:mt-1 ${nameBannerWidth} px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md shadow-md text-center border backdrop-blur-md transition-all duration-200 ease-out flex items-center justify-center ${
             isSelected
-              ? 'bg-white text-slate-950 border-white font-extrabold shadow-md'
-              : 'bg-slate-950/90 text-slate-100 border-white/20 font-semibold group-hover:border-white/40'
+              ? 'bg-emerald-500 text-slate-950 border-emerald-300 font-black ring-1 ring-emerald-400 shadow-md shadow-emerald-950/60 scale-105'
+              : 'bg-slate-950/90 text-white border-white/30 font-bold hover:border-emerald-400 hover:scale-105 shadow-black/80'
           }`}
         >
-          <div className="flex items-center justify-center gap-0.5 sm:gap-1 overflow-hidden">
-            {player.flag && <span className="text-[7.5px] sm:text-[10px] leading-none shrink-0">{player.flag}</span>}
-            <span className="text-[8px] sm:text-[9.5px] md:text-[10.5px] truncate tracking-tight font-sans">
-              {player.shortName || player.name || player.position}
+          <div className="flex items-center justify-center gap-1 overflow-hidden w-full">
+            {player.isCaptain && (
+              <span className="text-[7.5px] sm:text-[8px] font-black px-1 py-0.2 rounded bg-amber-400 text-slate-950 shrink-0 leading-none shadow-sm">
+                C
+              </span>
+            )}
+            {player.flag && <span className="text-[7.5px] sm:text-[9px] leading-none shrink-0">{player.flag}</span>}
+            <span className="text-[8.5px] sm:text-[10px] md:text-[11px] font-black truncate tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] leading-tight">
+              {player.shortName || player.name}
             </span>
           </div>
         </div>
