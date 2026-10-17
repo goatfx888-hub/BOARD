@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { Header } from './components/Header';
 import { Pitch } from './components/Pitch';
 import { TacticsSidebar } from './components/TacticsSidebar';
@@ -831,6 +832,7 @@ export default function App() {
         tokenDisplayMode={tokenDisplayMode}
         onChangeTokenDisplayMode={setTokenDisplayMode}
       />
+      <Analytics />
     </div>
   );
 }
