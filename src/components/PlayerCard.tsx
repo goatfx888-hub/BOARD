@@ -92,47 +92,49 @@ const PlayerCardComponent: React.FC<PlayerCardProps> = ({
               <span
                 className="absolute bottom-0 right-0 bg-slate-950/85 text-[7.5px] sm:text-[8px] font-black px-1 rounded-tl text-amber-400 border-t border-l border-slate-700"
               >
-                {player.number || player.position}
+                {player.number !== undefined && player.number !== null ? player.number : ''}
               </span>
             </>
           ) : (
-            /* Shirt Position or Number Icon */
+            /* Shirt Number in Middle - Just Numbers, Never Position */
             <span
-              className="font-black text-[8.5px] sm:text-[9.5px] md:text-[11px] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] tracking-tighter uppercase"
+              className="font-black text-[9px] sm:text-[10px] md:text-[12px] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] tracking-tight"
               style={{ color: kit.numberColor || '#ffffff' }}
             >
-              {tokenDisplayMode === 'position'
-                ? player.position
-                : (player.number !== undefined && player.number !== null && player.number > 0
-                  ? player.number
-                  : player.position)}
+              {player.number !== undefined && player.number !== null ? player.number : ''}
             </span>
           )}
         </div>
       </div>
 
-      {/* Modern Broadcast Style Player Name Banner */}
-      {showName && Boolean(player.shortName || player.name) && (
-        <div
-          className={`mt-0.5 sm:mt-1 ${nameBannerWidth} px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md shadow-md text-center border backdrop-blur-md transition-all duration-200 ease-out flex items-center justify-center ${
-            isSelected
-              ? 'bg-emerald-500 text-slate-950 border-emerald-300 font-black ring-1 ring-emerald-400 shadow-md shadow-emerald-950/60 scale-105'
-              : 'bg-slate-950/90 text-white border-white/30 font-bold hover:border-emerald-400 hover:scale-105 shadow-black/80'
-          }`}
-        >
-          <div className="flex items-center justify-center gap-1 overflow-hidden w-full">
-            {player.isCaptain && (
-              <span className="text-[7.5px] sm:text-[8px] font-black px-1 py-0.2 rounded bg-amber-400 text-slate-950 shrink-0 leading-none shadow-sm">
-                C
+      {/* Player Name Banner (Only actual player names when enabled, NEVER positions under players) */}
+      {(() => {
+        const rawName = (player.shortName || player.name || '').trim();
+        const isPosName = !rawName || rawName.toUpperCase() === (player.position || '').trim().toUpperCase();
+        if (!showName || isPosName) return null;
+
+        return (
+          <div
+            className={`mt-0.5 sm:mt-1 ${nameBannerWidth} px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-md shadow-md text-center border backdrop-blur-md transition-all duration-200 ease-out flex items-center justify-center ${
+              isSelected
+                ? 'bg-emerald-500 text-slate-950 border-emerald-300 font-black ring-1 ring-emerald-400 shadow-md shadow-emerald-950/60 scale-105'
+                : 'bg-slate-950/90 text-white border-white/30 font-bold hover:border-emerald-400 hover:scale-105 shadow-black/80'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-1 overflow-hidden w-full">
+              {player.isCaptain && (
+                <span className="text-[7.5px] sm:text-[8px] font-black px-1 py-0.2 rounded bg-amber-400 text-slate-950 shrink-0 leading-none shadow-sm">
+                  C
+                </span>
+              )}
+              {player.flag && <span className="text-[7.5px] sm:text-[9px] leading-none shrink-0">{player.flag}</span>}
+              <span className="text-[8.5px] sm:text-[10px] md:text-[11px] font-black truncate tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] leading-tight">
+                {rawName}
               </span>
-            )}
-            {player.flag && <span className="text-[7.5px] sm:text-[9px] leading-none shrink-0">{player.flag}</span>}
-            <span className="text-[8.5px] sm:text-[10px] md:text-[11px] font-black truncate tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] leading-tight">
-              {player.shortName || player.name}
-            </span>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

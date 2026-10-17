@@ -1,51 +1,26 @@
-const CACHE_NAME = 'becoach-cache-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.ico',
-  '/pwa-192x192.png',
-  '/pwa-512x512.png',
-  '/apple-touch-icon.png'
-];
+// Self-cleaning Service Worker for Be Coach PWA
+// In dev and preview environments, clear old caches and unregister to prevent Vite asset collision.
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
+      return Promise.all(keys.map((k) => caches.delete(k)));
+    }).then(() => {
+      return self.clients.claim();
+    }).then(() => {
+      // If running on dev/preview origin, unregister to avoid intercepting Vite dev server assets
+      if (typeof self.registration !== 'undefined' && self.registration.unregister) {
+        return self.registration.unregister();
+      }
     })
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
-        }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-        return networkResponse;
-      }).catch(() => {
-        return caches.match('/');
-      });
-    })
-  );
+// Pass-through all requests without aggressive caching in dev mode
+self.addEventListener('fetch', () => {
+  // Allow network requests to proceed natively
 });

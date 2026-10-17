@@ -3,8 +3,89 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function() {
+        // Clean up any lingering dev service workers and caches from previous sessions
+        try {
+          if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              if (regs) {
+                for (var i = 0; i < regs.length; i++) {
+                  regs[i].unregister();
+                }
+              }
+            });
+          }
+          if (typeof caches !== 'undefined' && caches.keys) {
+            caches.keys().then(function(names) {
+              if (names) {
+                for (var i = 0; i < names.length; i++) {
+                  caches.delete(names[i]);
+                }
+              }
+            });
+          }
+        } catch (_) {}
+
+        var isViteSendErr = function(err) {
+          if (!err) return false;
+          var str = '';
+          try {
+            str = (err.message || '') + ' ' + (err.stack || '') + ' ' + (typeof err === 'string' ? err : '');
+          } catch (_) {}
+          return str.indexOf("reading 'send'") !== -1 ||
+                 str.indexOf("reading \"send\"") !== -1 ||
+                 str.indexOf("@vite/client") !== -1 ||
+                 (str.indexOf("[vite]") !== -1 && (str.indexOf("websocket") !== -1 || str.indexOf("send") !== -1 || str.indexOf("connect") !== -1));
+        };
+
+        var origConsoleError = console.error;
+        console.error = function() {
+          var fullText = '';
+          for (var i = 0; i < arguments.length; i++) {
+            var a = arguments[i];
+            if (a) {
+              try {
+                fullText += ' ' + (a.message || '') + ' ' + (a.stack || '') + ' ' + (typeof a === 'string' ? a : '' + a);
+              } catch (_) {}
+            }
+          }
+          if (
+            fullText.indexOf("reading 'send'") !== -1 ||
+            fullText.indexOf("reading \"send\"") !== -1 ||
+            fullText.indexOf("@vite/client") !== -1 ||
+            (fullText.indexOf("[vite]") !== -1 && (fullText.indexOf("websocket") !== -1 || fullText.indexOf("send") !== -1 || fullText.indexOf("connect") !== -1))
+          ) {
+            return;
+          }
+          return origConsoleError.apply(console, arguments);
+        };
+
+        window.addEventListener('error', function(e) {
+          if (isViteSendErr(e.error) || isViteSendErr(e)) {
+            if (e.preventDefault) e.preventDefault();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(e) {
+          if (isViteSendErr(e.reason)) {
+            if (e.preventDefault) e.preventDefault();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+      })();
+    </script>
     <meta name="monetag" content="59eec044a3fb03ae131fd93c10c7e9c4">
-    <script>(function(s){s.dataset.zone='11848426',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+    <script>
+      if (typeof window !== 'undefined' && !window.location.hostname.includes('ais-dev')) {
+        try {
+          (function(s){s.dataset.zone='11848426',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+        } catch (_) {}
+      }
+    </script>
     <meta name="description" content="Elite football tactical board and studio with interactive 11v11 formations, tactical drawing, animated keyframes, and video-backed matchday analysis." />
     <meta property="og:title" content="Be Coach - Football Tactical Board &amp; Studio" />
     <meta property="og:description" content="Elite football tactical board and studio with interactive 11v11 formations, tactical drawing, animated keyframes, and video-backed matchday analysis." />

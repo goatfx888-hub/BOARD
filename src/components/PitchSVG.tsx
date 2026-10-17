@@ -394,8 +394,8 @@ const PitchSVGComponent: React.FC<PitchSVGProps> = ({
 
           {/* Professional Pitch Markings (Accurate IFAB Regulation Ratios with Chalk Filter) */}
           <g stroke={lineStroke} strokeWidth="3" fill="none" filter="url(#chalk-glow-h)">
-            {/* Outer Boundary Touchlines */}
-            <rect x="50" y="50" width="900" height="600" />
+            {/* Outer Boundary Touchlines (Sides of the Board) */}
+            <rect x="50" y="50" width="900" height="600" strokeWidth="2" />
 
             {/* Halfway Line */}
             <line x1="500" y1="50" x2="500" y2="650" />
@@ -813,8 +813,8 @@ const PitchSVGComponent: React.FC<PitchSVGProps> = ({
 
           {/* Professional Pitch Markings Vertical */}
           <g stroke={lineStroke} strokeWidth="3" fill="none" filter="url(#chalk-glow-v)">
-            {/* Touchlines */}
-            <rect x="50" y="50" width="600" height="900" />
+            {/* Touchlines (Sides of the Board) */}
+            <rect x="50" y="50" width="600" height="900" strokeWidth="2" />
 
             {/* Halfway Line */}
             <line x1="50" y1="500" x2="650" y2="500" />

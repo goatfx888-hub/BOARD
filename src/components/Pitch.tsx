@@ -388,7 +388,7 @@ const PitchComponent: React.FC<PitchProps> = ({
     return Math.max(2.4, Math.min(5.4, pct));
   }, [orientation]);
 
-  // Helper to place ball at Goalkeeper's feet for single-team mode
+  // Helper to place ball at Goalkeeper's feet (in front of GK facing outfield) for single-team mode
   const positionBallWithGoalkeeper = useCallback((activeMode: 'home_only' | 'away_only') => {
     const currentActiveSquad = activeMode === 'home_only' ? squad : (awaySquad || squad);
     const teamKey: 'home' | 'away' = activeMode === 'home_only' ? 'home' : 'away';
@@ -401,13 +401,13 @@ const PitchComponent: React.FC<PitchProps> = ({
       let targetX = xPos;
       let targetY = yPos;
       if (orientation === 'horizontal') {
-        targetX = teamKey === 'home'
-          ? Math.max(2, Math.min(98, xPos - offset))
-          : Math.max(2, Math.min(98, xPos + offset));
+        // In horizontal mode, GK defends the left goal (xPos ≈ 11%).
+        // In front of the GK towards teammates/outfield is to the right (+ offset).
+        targetX = Math.max(2, Math.min(98, xPos + offset));
       } else {
-        targetY = teamKey === 'home'
-          ? Math.max(2, Math.min(98, yPos - offset))
-          : Math.max(2, Math.min(98, yPos + offset));
+        // In vertical mode, GK defends the bottom goal (yPos ≈ 92%).
+        // In front of the GK towards teammates/outfield is upward (- offset).
+        targetY = Math.max(2, Math.min(98, yPos - offset));
       }
       setBallPos({ x: targetX, y: targetY });
     }
@@ -427,6 +427,13 @@ const PitchComponent: React.FC<PitchProps> = ({
       }
     }
   }, [matchMode, positionBallWithGoalkeeper]);
+
+  // When orientation changes in single team mode, maintain ball in front of GK
+  useEffect(() => {
+    if (matchMode === 'home_only' || matchMode === 'away_only') {
+      positionBallWithGoalkeeper(matchMode);
+    }
+  }, [orientation]);
 
   // Dragging Player State (Mouse / Touch on Mobile & Tablet)
   const [draggingPlayerId, setDraggingPlayerId] = useState<string | null>(null);
@@ -1339,6 +1346,7 @@ const PitchComponent: React.FC<PitchProps> = ({
               onClick={() => {
                 onMatchModeChange('home_only');
                 onSelectTeam?.('home');
+                positionBallWithGoalkeeper('home_only');
               }}
               className={`px-1.5 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
                 matchMode === 'home_only'
@@ -1377,6 +1385,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                 onClick={() => {
                   onMatchModeChange('away_only');
                   onSelectTeam?.('away');
+                  positionBallWithGoalkeeper('away_only');
                 }}
                 className={`px-1.5 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
                   matchMode === 'away_only'
