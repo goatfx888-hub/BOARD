@@ -225,10 +225,8 @@ export const Header: React.FC<HeaderProps> = ({
               className={`flex items-center gap-2.5 ${onNavigateHome ? 'cursor-pointer group select-none' : ''}`}
               title={onNavigateHome ? 'Return to Tactical Studio Landing' : undefined}
             >
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 p-0.5 flex items-center justify-center shadow-md shadow-emerald-500/20 text-slate-950 shrink-0 group-hover:scale-105 transition-transform duration-200">
-                <div className="w-full h-full rounded-[10px] bg-black flex items-center justify-center overflow-hidden p-0.5">
-                  <SvgBeCoachLogo className="w-full h-full drop-shadow group-hover:scale-110 transition-transform duration-300" />
-                </div>
+              <div className="w-9 h-9 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-200">
+                <SvgBeCoachLogo className="w-full h-full drop-shadow-md rounded-md" />
               </div>
               <div className="flex items-center gap-2">
                 <h1
@@ -766,10 +764,8 @@ export const Header: React.FC<HeaderProps> = ({
             className={`flex items-center gap-2 ${onNavigateHome ? 'cursor-pointer select-none active:opacity-80' : ''}`}
             title={onNavigateHome ? 'Return to Home Page' : undefined}
           >
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 p-0.5 flex items-center justify-center text-slate-950 shrink-0 shadow-sm">
-              <div className="w-full h-full rounded-[6px] bg-black flex items-center justify-center overflow-hidden p-0.5">
-                <SvgBeCoachLogo className="w-full h-full drop-shadow" />
-              </div>
+            <div className="w-8 h-8 flex items-center justify-center shrink-0">
+              <SvgBeCoachLogo className="w-full h-full drop-shadow-sm rounded-md" />
             </div>
             <h1 className={`font-black text-sm tracking-normal flex items-center leading-none ${isLight ? 'text-slate-900' : 'text-white'}`}>
               BE COACH

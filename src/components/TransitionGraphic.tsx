@@ -90,11 +90,9 @@ export const TransitionGraphic: React.FC<TransitionGraphicProps> = ({
               initial={{ scale: 0 }}
               animate={{ scale: [0.8, 1.1, 1] }}
               transition={{ duration: 0.5 }}
-              className="absolute inset-0 m-auto w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-400 p-1 flex items-center justify-center shadow-2xl shadow-emerald-500/40"
+              className="absolute inset-0 m-auto w-20 h-20 flex items-center justify-center filter drop-shadow-2xl"
             >
-              <div className="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center overflow-hidden p-1">
-                <SvgBeCoachLogo className="w-12 h-12 drop-shadow-lg animate-pulse" />
-              </div>
+              <SvgBeCoachLogo className="w-full h-full drop-shadow-lg" />
             </motion.div>
 
             {/* Orbiting tactical dots */}

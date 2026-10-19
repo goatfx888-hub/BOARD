@@ -244,18 +244,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none shrink-0"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
-            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl p-0.5 flex items-center justify-center shadow-md shrink-0 group border ${
-              isLight
-                ? 'bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 shadow-emerald-500/10 border-emerald-300/40'
-                : 'bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 shadow-emerald-500/20 border-emerald-300/40'
-            }`}>
-              <div
-                className={`w-full h-full rounded-[10px] sm:rounded-[14px] flex items-center justify-center overflow-hidden p-1 ${
-                  isLight ? 'bg-white' : 'bg-black'
-                }`}
-              >
-                <SvgBeCoachLogo className="w-full h-full drop-shadow-md group-hover:scale-110 transition-transform duration-300" />
-              </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 group">
+              <SvgBeCoachLogo className="w-full h-full drop-shadow-md group-hover:scale-105 transition-transform duration-300 rounded-lg" />
             </div>
             <div>
               <div className="flex items-center gap-1.5 leading-none">
@@ -264,7 +254,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     isLight ? 'text-slate-950' : 'text-white'
                   }`}
                 >
-                  BE COACH
+                  <span className="text-emerald-500 font-extrabold italic mr-0.5">BE</span> COACH
                 </span>
               </div>
               <p className={`text-[10px] font-medium tracking-normal hidden sm:block mt-0.5 ${
@@ -1384,13 +1374,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Column 1: Brand & Bio */}
           <div className="sm:col-span-2 md:col-span-3 lg:col-span-2 space-y-3 sm:space-y-4">
             <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-2xl p-1 flex items-center justify-center shadow-md border ${
-                isLight ? 'bg-white border-slate-200' : 'bg-black border-neutral-800'
-              }`}>
-                <SvgBeCoachLogo className="w-full h-full" />
+              <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                <SvgBeCoachLogo className="w-full h-full drop-shadow-md rounded-lg" />
               </div>
               <span className={`font-luxury font-bold text-base tracking-[0.14em] uppercase ${isLight ? 'text-slate-950' : 'text-white'}`}>
-                BE COACH
+                <span className="text-emerald-500 font-extrabold italic mr-0.5">BE</span> COACH
               </span>
             </div>
             <p className={`text-xs leading-relaxed max-w-sm font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>

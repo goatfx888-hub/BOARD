@@ -7,124 +7,15 @@ interface SvgProps {
 
 // 1. Professional Football Coach & Tactical Board Vector Logo (Be Coach Official Emblem)
 export const SvgBeCoachLogo: React.FC<SvgProps> = ({ className = 'w-6 h-6', size }) => (
-  <svg
-    viewBox="0 0 48 48"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
+  <img
+    src="/assets/aistudio/_______________________________5bb7d35c.png"
+    alt="Be Coach Logo"
+    className={`inline-block object-contain select-none pointer-events-none ${className}`}
     width={size}
     height={size}
-  >
-    <defs>
-      {/* Dynamic Gradients */}
-      <linearGradient id="bcGradPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#34d399" />
-        <stop offset="45%" stopColor="#10b981" />
-        <stop offset="100%" stopColor="#059669" />
-      </linearGradient>
-      <linearGradient id="bcGradCyan" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#38bdf8" />
-        <stop offset="50%" stopColor="#2dd4bf" />
-        <stop offset="100%" stopColor="#0284c7" />
-      </linearGradient>
-      <linearGradient id="bcGradGold" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#fde047" />
-        <stop offset="50%" stopColor="#fbbf24" />
-        <stop offset="100%" stopColor="#d97706" />
-      </linearGradient>
-      <linearGradient id="bcShieldBg" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0f172a" />
-        <stop offset="100%" stopColor="#020617" />
-      </linearGradient>
-      <linearGradient id="bcGlassHighlight" x1="0%" y1="0%" x2="100%" y2="50%">
-        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
-        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-      </linearGradient>
-      <filter id="bcGlow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" floodColor="#10b981" floodOpacity="0.5" />
-      </filter>
-    </defs>
-
-    {/* Master Geometric Crest Frame (Modern Chamfered Tactical Shield) */}
-    <path
-      d="M24 2.5L42 7.5V21C42 33.5 34.5 42.5 24 46C13.5 42.5 6 33.5 6 21V7.5L24 2.5Z"
-      fill="url(#bcShieldBg)"
-      stroke="url(#bcGradPrimary)"
-      strokeWidth="1.8"
-      strokeLinejoin="round"
-    />
-
-    {/* Inner Glass Bevel Highlight */}
-    <path
-      d="M24 4.5L40 9V21C40 31.5 33.5 39.8 24 43.5C14.5 39.8 8 31.5 8 21V9L24 4.5Z"
-      stroke="url(#bcGlassHighlight)"
-      strokeWidth="1"
-      fill="none"
-      opacity="0.8"
-    />
-
-    {/* Tactical Pitch Geometry Subdivision */}
-    <path
-      d="M10 24H38M24 9V41"
-      stroke="#1e293b"
-      strokeWidth="1.2"
-      strokeDasharray="2 2"
-      opacity="0.8"
-    />
-    <circle
-      cx="24"
-      cy="24"
-      r="8.5"
-      stroke="#334155"
-      strokeWidth="1"
-      strokeDasharray="2 2"
-      fill="none"
-      opacity="0.5"
-    />
-
-    {/* Letter "B" (Bold Tactical Pillar & Fluid Upper/Lower Loops) */}
-    <path
-      d="M14.5 13.5V34.5"
-      stroke="url(#bcGradPrimary)"
-      strokeWidth="3.2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M14.5 14H22.5C25.5 14 27.5 15.8 27.5 18.5C27.5 21.2 25.5 23 22.5 23H14.5M14.5 23H23.5C27 23 29 25 29 28.5C29 32 27 34 23.5 34H14.5"
-      stroke="url(#bcGradPrimary)"
-      strokeWidth="2.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      filter="url(#bcGlow)"
-    />
-
-    {/* Letter "C" (Tactical Encompassing Arc & Forward Strategy Vector) */}
-    <path
-      d="M36 17C33.5 14.5 29.5 13.5 25.5 14M25.5 34C30 34.5 34 33 36.5 29.5"
-      stroke="url(#bcGradCyan)"
-      strokeWidth="2.8"
-      strokeLinecap="round"
-    />
-
-    {/* Dynamic Forward Strategy Vector Arrow (Tactical Playmaker Breakaway) */}
-    <path
-      d="M31.5 12L37.5 11.5L36.8 17.5"
-      stroke="url(#bcGradGold)"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-
-    {/* Central Tactical Ball / Node Token */}
-    <circle cx="24" cy="24" r="2.6" fill="#ffffff" stroke="#090d16" strokeWidth="1" />
-    <circle cx="24" cy="24" r="1.1" fill="#10b981" />
-
-    {/* Tactical Star / Coach Excellence Crest Emblem at Apex */}
-    <polygon
-      points="24,5 24.9,7.2 27.2,7.2 25.3,8.6 26.1,10.8 24,9.4 21.9,10.8 22.7,8.6 20.8,7.2 23.1,7.2"
-      fill="url(#bcGradGold)"
-    />
-  </svg>
+    loading="eager"
+    decoding="async"
+  />
 );
 
 // 1b. Legacy SvgCoachLogo alias for backward compatibility

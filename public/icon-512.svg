@@ -1,21 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<?xml version='1.0' encoding='UTF-8'?>
+<svg viewBox='0 0 100 100' width='512' height='512' xmlns='http://www.w3.org/2000/svg'>
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stopColor="#0a0f1d"/>
-      <stop offset="100%" stopColor="#020617"/>
-    </linearGradient>
-    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stopColor="#00df82"/>
-      <stop offset="50%" stopColor="#10b981"/>
-      <stop offset="100%" stopColor="#059669"/>
+    <linearGradient id='bcAmberGrad' x1='0%' y1='0%' x2='0%' y2='100%'>
+      <stop offset='0%' stop-color='#fac338' />
+      <stop offset='100%' stop-color='#f5a91f' />
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="100" fill="url(#bgGrad)"/>
-  <rect x="16" y="16" width="480" height="480" rx="90" fill="none" stroke="url(#emeraldGrad)" stroke-width="8" opacity="0.4"/>
-  <g transform="translate(64, 64) scale(8)">
-    <path d="M24 2.5L42 7.5V21C42 33.5 34.5 42.5 24 46C13.5 42.5 6 33.5 6 21V7.5L24 2.5Z" fill="#0b1329" stroke="url(#emeraldGrad)" stroke-width="2" stroke-linejoin="round"/>
-    <path d="M16 14V34H23C26.5 34 29 31.5 29 28C29 25 27 23.5 24 23C26.5 22.5 28 20.5 28 18C28 15 25.5 14 22 14H16Z" stroke="url(#emeraldGrad)" stroke-width="2.5" fill="none"/>
-    <line x1="16" y1="23.5" x2="23" y2="23.5" stroke="url(#emeraldGrad)" stroke-width="2.5"/>
-    <circle cx="24" cy="24" r="3" fill="#00df82"/>
+
+  <!-- 3D Shadow Base -->
+  <rect x='6' y='10' width='88' height='88' rx='26' fill='#d79316' />
+
+  <!-- Main Amber Squircle Face -->
+  <rect x='6' y='6' width='88' height='88' rx='26' fill='url(#bcAmberGrad)' />
+
+  <!-- Tactical Target 'X' (Upper Right) -->
+  <g stroke='#0c1826' stroke-width='7.5' stroke-linecap='round'>
+    <line x1='52' y1='18' x2='66' y2='32' />
+    <line x1='66' y1='18' x2='52' y2='32' />
   </g>
+
+  <!-- Player Circle 'O' (Lower Left) -->
+  <circle cx='35' cy='52' r='9.5' stroke='#0c1826' stroke-width='7' fill='none' />
+
+  <!-- Two Dotted Pass Sequence Points -->
+  <circle cx='48' cy='46' r='3.4' fill='#0c1826' />
+  <circle cx='55.5' cy='43' r='3.4' fill='#0c1826' />
+
+  <!-- Tactical Curved Vector Run -->
+  <path
+    d='M 40.5 58 C 45 65, 57 65, 64 57 C 67 54, 69.5 49, 70.5 43.5'
+    stroke='#0c1826'
+    stroke-width='7'
+    stroke-linecap='round'
+    fill='none'
+  />
+
+  <!-- Arrowhead pointing up-right toward Target X -->
+  <path
+    d='M 61.5 46.5 L 70.5 42.5 L 67.5 52'
+    stroke='#0c1826'
+    stroke-width='7'
+    stroke-linecap='round'
+    stroke-linejoin='round'
+    fill='none'
+  />
 </svg>
