@@ -15,6 +15,15 @@ import {
   Sparkles,
   Crosshair,
   RotateCcw,
+  Play,
+  ArrowRight,
+  Star,
+  PenTool,
+  LayoutGrid,
+  Layers,
+  PlayCircle,
+  Laptop,
+  Users,
 } from 'lucide-react';
 import { LegalTabType } from './LegalModal';
 import { useTheme } from '../context/ThemeContext';
@@ -197,6 +206,81 @@ const getShiftedPosition = (
 
   return { x, y };
 };
+
+const HeroPlayerMarker: React.FC<{
+  player: HeroPlayer;
+  phase: 'balanced' | 'attack' | 'defense';
+  isSelected: boolean;
+  onClick: () => void;
+}> = ({ player, phase, isSelected, onClick }) => {
+  const { x, y } = getShiftedPosition(player, phase);
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      animate={{ left: `${x}%`, top: `${y}%` }}
+      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+      className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center group cursor-pointer focus:outline-none"
+    >
+      <div
+        className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center font-black text-[9px] sm:text-[10px] shadow-lg transition-transform duration-200 group-hover:scale-125 ${
+          isSelected
+            ? 'bg-amber-400 text-slate-950 ring-2 ring-white scale-110'
+            : 'bg-emerald-400 text-slate-950 ring-1 ring-emerald-950/40'
+        }`}
+      >
+        {player.label}
+      </div>
+      <span
+        className={`text-[8px] sm:text-[9px] font-bold px-1 rounded mt-0.5 whitespace-nowrap shadow-sm pointer-events-none ${
+          isSelected ? 'bg-amber-400 text-slate-950 font-black' : 'bg-black/80 text-white'
+        }`}
+      >
+        {player.name}
+      </span>
+    </motion.button>
+  );
+};
+
+const PitchSurfaceBackground: React.FC<{ isLight: boolean }> = () => (
+  <div className="absolute inset-0 bg-[#0f2e1b]">
+    <div className="absolute inset-0 flex flex-col">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div
+          key={i}
+          className={`flex-1 ${i % 2 === 0 ? 'bg-white/[0.04]' : 'bg-transparent'}`}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+const PitchTacticalMarkings: React.FC<{ isLight: boolean }> = () => (
+  <svg
+    className="absolute inset-0 w-full h-full pointer-events-none"
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+  >
+    <rect x="4" y="4" width="92" height="92" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+    <line x1="4" y1="50" x2="96" y2="50" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+    <circle cx="50" cy="50" r="12" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+    <circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.8)" />
+    <rect x="25" y="4" width="50" height="16" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+    <rect x="36" y="4" width="28" height="6" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+    <rect x="25" y="80" width="50" height="16" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+    <rect x="36" y="90" width="28" height="6" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+  </svg>
+);
+
+const PitchChannelZones: React.FC = () => (
+  <div className="absolute inset-0 pointer-events-none grid grid-cols-5 border-x border-white/10 z-10">
+    <div className="border-r border-dashed border-teal-400/25 bg-teal-500/[0.04]" />
+    <div className="border-r border-dashed border-emerald-400/25 bg-emerald-500/[0.04]" />
+    <div className="border-r border-dashed border-teal-400/25 bg-teal-500/[0.04]" />
+    <div className="border-r border-dashed border-emerald-400/25 bg-emerald-500/[0.04]" />
+    <div className="bg-teal-500/[0.04]" />
+  </div>
+);
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onLaunchBoard,
@@ -433,443 +517,225 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </header>
 
       {/* ========================================================================= */}
-      {/* HERO SECTION WITH TACTICAL STADIUM BACKGROUND & MATCHDAY STUDIO */}
+      {/* HERO SECTION: INSPIRATION DESIGN (BE COACH AND SHOW US YOUR IDEAS) */}
       {/* ========================================================================= */}
-      <section className="relative isolate overflow-hidden pt-4 pb-10 sm:pt-8 sm:pb-16 lg:pt-12 lg:pb-24 px-3 sm:px-6 lg:px-8">
-        
-        {/* Background Atmosphere: Cinematic Stadium & Tactical Chalkboard */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
-          {/* Tactical Stadium & Player Celebrating Background Image - Multi-device Framing */}
-          <img
-            src="/hero-tactical-bg.jpg"
-            alt="Football Stadium Tactical Atmosphere"
-            referrerPolicy="no-referrer"
-            className={`w-full h-full object-cover object-[78%_20%] sm:object-[72%_25%] md:object-[68%_30%] lg:object-right transition-all duration-700 ${
-              isLight
-                ? 'opacity-35 sm:opacity-40 filter brightness-[1.05] contrast-[1.05]'
-                : 'opacity-90 sm:opacity-95 filter brightness-[0.95] contrast-[1.15]'
-            }`}
-          />
-
-          {/* Tactical Pitch Geometry Dot Grid */}
-          <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:24px_24px] sm:[background-size:28px_28px] opacity-15" />
-
-          {/* Background Ambient Glow */}
-          <div
-            className={`absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] sm:w-[480px] lg:w-[650px] h-[280px] sm:h-[480px] lg:h-[650px] rounded-full blur-3xl pointer-events-none ${
-              isLight ? 'bg-emerald-500/10' : 'bg-emerald-500/25'
-            }`}
-          />
-
-          {/* High-Legibility Adaptive Gradient Overlay for Phones, Tablets & Desktops */}
-          <div
-            className={`absolute inset-0 transition-colors duration-300 ${
-              isLight
-                ? 'bg-gradient-to-b from-slate-50/95 via-slate-50/80 to-slate-50/95 lg:bg-gradient-to-r lg:from-slate-50/95 lg:via-slate-50/75 lg:to-slate-50/30'
-                : 'bg-gradient-to-b from-black/90 via-black/65 to-black/90 lg:bg-gradient-to-r lg:from-black/85 lg:via-black/45 lg:to-transparent'
-            }`}
-          />
-
-          {/* Top Boundary Vignette */}
-          <div
-            className={`absolute top-0 inset-x-0 h-16 sm:h-24 lg:h-32 bg-gradient-to-b ${
-              isLight ? 'from-slate-50/90' : 'from-black/85'
-            } to-transparent`}
-          />
-
-          {/* Bottom Boundary Vignette */}
-          <div
-            className={`absolute bottom-0 inset-x-0 h-16 sm:h-24 lg:h-32 bg-gradient-to-t ${
-              isLight ? 'from-slate-50' : 'from-black'
-            } to-transparent`}
-          />
+      <section className="relative w-full overflow-hidden bg-black text-white">
+        {/* Full-bleed Panoramic Background (Fast WebP with fallback) */}
+        <div className="absolute inset-0 z-0">
+          <picture className="w-full h-full block">
+            <source srcSet="/hero_showcase_bg.webp" type="image/webp" />
+            <img
+              src="/hero_showcase_bg.png"
+              alt="Be Coach Tactical Board Studio"
+              className="w-full h-full object-cover object-right md:object-center opacity-90 lg:opacity-100"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
+          </picture>
+          {/* Subtle left-side atmospheric vignette for absolute text clarity */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/80 to-transparent lg:from-black/90 lg:via-black/60 lg:to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 pointer-events-none" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-6 sm:gap-10 lg:gap-14">
-          
-          {/* Left Column: Headline, Description & The ONLY Primary Middle CTA */}
-          <div className="flex-1 text-center lg:text-left space-y-3.5 sm:space-y-5 lg:space-y-6 max-w-2xl">
+        {/* Hero Content Container */}
+        <div className="relative z-10 w-full max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-8 sm:pt-14 lg:pt-16 pb-8 sm:pb-12 min-h-[720px] lg:min-h-[860px] xl:min-h-[920px] flex flex-col justify-between">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
-            {/* Pill Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold tracking-wide uppercase shadow-sm ${
-                isLight
-                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-                  : 'bg-emerald-950/70 border border-emerald-400/40 text-emerald-300'
-              }`}
-            >
-              <SvgCrownStar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-              <span>Next-Gen Football Tactics Studio • 2026 Edition</span>
-            </motion.div>
-
-            {/* Main Headline */}
-            <motion.h1
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className={`text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15] sm:leading-[1.12] uppercase ${
-                isLight ? 'text-slate-950' : 'text-white'
-              }`}
-            >
-              BE COACH AND{' '}
-              <span className="block font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300 dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-200 mt-0.5 sm:mt-1">
-                SHOW US YOUR IDEAS
-              </span>
-            </motion.h1>
-
-            {/* Subtitle */}
-            <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className={`text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed font-normal px-0.5 sm:px-0 max-w-xl mx-auto lg:mx-0 ${
-                isLight ? 'text-slate-700' : 'text-slate-300'
-              }`}
-            >
-              The all-in-one football tactics board trusted by coaches, analysts, and creators. Build custom formations, simulate 11v11 clashes, customize realistic stadium turf, design team kits, and record animated tactical sequences.
-            </motion.p>
-
-            {/* Tactical Highlights Pills */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.25 }}
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5 sm:gap-2 pt-0.5 sm:pt-1"
-            >
-              <span className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold border flex items-center gap-1.5 ${
-                isLight ? 'bg-slate-100/90 border-slate-200 text-slate-700' : 'bg-neutral-900/90 border-neutral-800 text-neutral-300'
-              }`}>
-                <Crosshair className="w-3.5 h-3.5 text-emerald-500" />
-                <span>5-Channel Positional Play</span>
-              </span>
-              <span className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold border flex items-center gap-1.5 ${
-                isLight ? 'bg-slate-100/90 border-slate-200 text-slate-700' : 'bg-neutral-900/90 border-neutral-800 text-neutral-300'
-              }`}>
-                <Activity className="w-3.5 h-3.5 text-teal-500" />
-                <span>11v11 Match Engine</span>
-              </span>
-              <span className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold border flex items-center gap-1.5 ${
-                isLight ? 'bg-slate-100/90 border-slate-200 text-slate-700' : 'bg-neutral-900/90 border-neutral-800 text-neutral-300'
-              }`}>
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>Animated Keyframe Transitions</span>
-              </span>
-            </motion.div>
-
-            {/* MIDDLE PRIMARY CTA BUTTONS */}
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 sm:gap-4 pt-1 sm:pt-2 w-full"
-            >
-              {/* Primary Middle CTA Button */}
-              <button
-                onClick={() => onLaunchBoard(selectedFormationKey)}
-                className="w-full sm:w-auto px-6 sm:px-9 py-3 sm:py-4 rounded-2xl font-bold text-sm sm:text-base transition-all flex items-center justify-center gap-2.5 sm:gap-3 cursor-pointer group relative overflow-hidden luxury-cta text-slate-950 border border-emerald-200/50 shadow-lg shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-luxury-shimmer pointer-events-none" />
-                <SvgLuxuryPlay className="w-4 h-4 text-slate-950 shrink-0" />
-                <span className="tracking-wide whitespace-nowrap font-extrabold">Open Tactical Board</span>
-                <SvgLuxuryArrow className="w-4 h-4 group-hover:translate-x-1 transition-transform shrink-0" />
-              </button>
-
-              {/* Secondary Feature Explorer Button */}
-              <a
-                href="#features"
-                className={`w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-4 rounded-2xl border font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-[0.98] ${
-                  isLight
-                    ? 'bg-white/90 hover:bg-white border-slate-300 text-slate-800'
-                    : 'bg-neutral-900/90 hover:bg-neutral-800 border-neutral-700 text-neutral-200 hover:text-white'
-                }`}
-              >
-                <SvgDiamondBadge className="w-4 h-4 text-emerald-500" />
-                <span>Explore Features</span>
-              </a>
-            </motion.div>
-
-            {/* Trust Badges */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className={`pt-1 sm:pt-4 flex flex-wrap sm:grid sm:grid-cols-3 justify-center lg:justify-start gap-1.5 sm:gap-3 text-[11px] sm:text-xs font-semibold ${
-                isLight ? 'text-slate-700' : 'text-neutral-300'
-              }`}
-            >
-              <div className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 border sm:border-0 rounded-xl px-2.5 py-1.5 sm:p-0 ${
-                isLight ? 'bg-slate-100/80 border-slate-200' : 'bg-neutral-900/60 border-neutral-800'
-              }`}>
-                <SvgLuxuryCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 shrink-0" />
-                <span>100% Free &amp; In-Browser</span>
-              </div>
-              <div className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 border sm:border-0 rounded-xl px-2.5 py-1.5 sm:p-0 ${
-                isLight ? 'bg-slate-100/80 border-slate-200' : 'bg-neutral-900/60 border-neutral-800'
-              }`}>
-                <SvgLuxuryCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 shrink-0" />
-                <span>4K PNG Diagram Export</span>
-              </div>
-              <div className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 border sm:border-0 rounded-xl px-2.5 py-1.5 sm:p-0 ${
-                isLight ? 'bg-slate-100/80 border-slate-200' : 'bg-neutral-900/60 border-neutral-800'
-              }`}>
-                <SvgLuxuryCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 shrink-0" />
-                <span>Interactive 11v11 Engine</span>
-              </div>
-            </motion.div>
-
-          </div>
-
-          {/* Right Column: Friendly & Responsive Interactive Hero Pitch Board */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="flex-1 w-full max-w-lg lg:max-w-none mx-auto"
-          >
-            <div className={`relative p-1.5 sm:p-2 rounded-2xl sm:rounded-3xl shadow-2xl border transition-all ${
-              isLight
-                ? 'bg-white/95 border-slate-200 shadow-slate-200/80 backdrop-blur-md'
-                : 'bg-neutral-950/95 border-neutral-800 shadow-black backdrop-blur-md'
-            }`}>
+            {/* Left Column: Tactical Pitch Studio Messaging & Actions */}
+            <div className="lg:col-span-7 xl:col-span-6 flex flex-col items-start text-left space-y-5 sm:space-y-6 max-w-2xl">
               
-              {/* Top Board Control Bar (Formations + Tactical Phases + Interactive Toggles) */}
-              <div className={`p-2 sm:p-3 rounded-t-xl sm:rounded-t-2xl flex flex-col gap-1.5 sm:gap-2 border-b ${
-                isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-black border-neutral-800 text-white'
-              }`}>
-                
-                {/* Row 1: Formation Selectors & 5-Channel Zones */}
-                <div className="flex items-center justify-between gap-1.5 sm:gap-2">
-                  <div className="flex items-center gap-1 overflow-x-auto pb-0.5 max-w-full scrollbar-none">
-                    {(['4-3-3', '4-2-3-1', '3-5-2', '4-4-2', '5-3-2'] as const).map((fmt) => (
-                      <button
-                        key={fmt}
-                        onClick={() => {
-                          setSelectedFormationKey(fmt);
-                          setSelectedPlayerId(null);
-                        }}
-                        className={`px-2 sm:px-2.5 md:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition active:scale-95 cursor-pointer whitespace-nowrap shrink-0 ${
-                          selectedFormationKey === fmt
-                            ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-extrabold'
-                            : isLight
-                            ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                            : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white'
-                        }`}
-                      >
-                        {fmt}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => setShowZones(!showZones)}
-                    className={`px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold border flex items-center gap-1 transition active:scale-95 cursor-pointer shrink-0 ${
-                      showZones
-                        ? 'bg-teal-500 text-slate-950 border-teal-400 font-extrabold shadow-sm'
-                        : isLight
-                        ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
-                        : 'bg-black border-neutral-800 text-neutral-300 hover:bg-neutral-800'
-                    }`}
-                    title="Toggle Tactical 5-Channel Zones"
-                  >
-                    <span>Zones</span>
-                  </button>
-                </div>
-
-                {/* Row 2: Tactical Phase Simulator (Balanced, Attack, Defense) */}
-                <div className="flex items-center justify-between gap-1.5 pt-1 border-t border-slate-200/60 dark:border-neutral-800/80 text-[10px] sm:text-[11px]">
-                  <span className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1 text-slate-500 dark:text-neutral-400">
-                    <Activity className="w-3 h-3 text-emerald-500" />
-                    <span>Phase Sim:</span>
-                  </span>
-
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setTacticalPhase('balanced')}
-                      className={`px-1.5 sm:px-2 py-0.5 rounded-md text-[9.5px] sm:text-[10px] font-bold transition cursor-pointer ${
-                        tacticalPhase === 'balanced'
-                          ? 'bg-slate-800 text-white dark:bg-neutral-200 dark:text-slate-950 shadow-xs'
-                          : isLight
-                          ? 'text-slate-600 hover:bg-slate-200'
-                          : 'text-neutral-400 hover:bg-neutral-800'
-                      }`}
-                    >
-                      Shape
-                    </button>
-                    <button
-                      onClick={() => setTacticalPhase('attack')}
-                      className={`px-1.5 sm:px-2 py-0.5 rounded-md text-[9.5px] sm:text-[10px] font-bold transition cursor-pointer flex items-center gap-0.5 sm:gap-1 ${
-                        tacticalPhase === 'attack'
-                          ? 'bg-emerald-500 text-slate-950 shadow-xs'
-                          : isLight
-                          ? 'text-emerald-700 hover:bg-emerald-50'
-                          : 'text-emerald-400 hover:bg-emerald-950/50'
-                      }`}
-                    >
-                      <span>Attack</span>
-                      <span className="text-[8px] sm:text-[9px]">▲</span>
-                    </button>
-                    <button
-                      onClick={() => setTacticalPhase('defense')}
-                      className={`px-1.5 sm:px-2 py-0.5 rounded-md text-[9.5px] sm:text-[10px] font-bold transition cursor-pointer flex items-center gap-0.5 sm:gap-1 ${
-                        tacticalPhase === 'defense'
-                          ? 'bg-amber-500 text-slate-950 shadow-xs'
-                          : isLight
-                          ? 'text-amber-700 hover:bg-amber-50'
-                          : 'text-amber-400 hover:bg-amber-950/50'
-                      }`}
-                    >
-                      <span>Defense</span>
-                      <span className="text-[8px] sm:text-[9px]">▼</span>
-                    </button>
-                  </div>
-                </div>
-
+              {/* Badge: THE ULTIMATE FOOTBALL TACTICAL BOARD */}
+              <div className="inline-flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full bg-black/75 border border-emerald-500/40 backdrop-blur-md shadow-lg shadow-emerald-950/40">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                </span>
+                <span className="text-[10px] sm:text-[11px] font-extrabold tracking-widest text-emerald-300 uppercase">
+                  The Ultimate Football Tactical Board
+                </span>
               </div>
 
-              {/* Pitch Canvas Preview */}
-              <div className="relative aspect-[4/3] rounded-lg sm:rounded-xl bg-gradient-to-b from-emerald-900 via-emerald-800 to-emerald-950 overflow-hidden select-none shadow-inner">
-                
-                {/* Grass Stripes Pattern */}
-                <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.08)_50%,transparent_50%)] bg-[length:100%_40px] opacity-50 pointer-events-none" />
+              {/* Main Headline: BE COACH AND SHOW US YOUR IDEAS */}
+              <div className="space-y-1">
+                <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[4rem] xl:text-[4.5rem] font-black uppercase tracking-tight leading-[0.94] text-white">
+                  <span className="block drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+                    BE COACH AND
+                  </span>
+                  {/* Refined subtle emerald glow (softened neon per request) */}
+                  <span className="block text-[#10B981] italic font-black drop-shadow-[0_2px_14px_rgba(16,185,129,0.35)] mt-1">
+                    SHOW US YOUR IDEAS
+                  </span>
+                </h1>
+              </div>
 
-                {/* Tactical 5-Channel Zones Overlay */}
-                {showZones && (
-                  <div className="absolute inset-0 grid grid-cols-5 pointer-events-none z-0">
-                    <div className="border-r border-dashed border-white/15 bg-white/[0.02] flex items-start justify-center pt-2 text-[7px] font-semibold text-white/40 uppercase tracking-wider">Flank</div>
-                    <div className="border-r border-dashed border-cyan-400/20 bg-cyan-500/[0.04] flex items-start justify-center pt-2 text-[7px] font-semibold text-cyan-300/60 uppercase tracking-wider">Half-Space</div>
-                    <div className="border-r border-dashed border-white/15 bg-white/[0.015] flex items-start justify-center pt-2 text-[7px] font-semibold text-emerald-300/60 uppercase tracking-wider">Center</div>
-                    <div className="border-r border-dashed border-cyan-400/20 bg-cyan-500/[0.04] flex items-start justify-center pt-2 text-[7px] font-semibold text-cyan-300/60 uppercase tracking-wider">Half-Space</div>
-                    <div className="bg-white/[0.02] flex items-start justify-center pt-2 text-[7px] font-semibold text-white/40 uppercase tracking-wider">Flank</div>
+              {/* Subtitle */}
+              <p className="text-xs sm:text-sm md:text-base lg:text-lg text-slate-200/90 font-medium leading-relaxed max-w-xl drop-shadow-md">
+                Elite football tactical board studio: 11v11 custom formations, tactical drawing tools, realistic turf, and animated matchday sequences.
+              </p>
+
+              {/* 4 Feature Badges (Custom Formations, Tactical Drawing, Realistic Turf, Animated Sequences) */}
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 w-full pt-1">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/60 border border-emerald-500/35 backdrop-blur-md">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-950/70 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                    <LayoutGrid className="w-3.5 h-3.5 text-emerald-400" />
                   </div>
-                )}
-
-                {/* Pitch Markings SVG */}
-                <svg className="absolute inset-0 w-full h-full stroke-white/50 fill-none" strokeWidth="2">
-                  {/* Outer Boundary */}
-                  <rect x="5%" y="5%" width="90%" height="90%" rx="6" />
-                  {/* Halfway Line */}
-                  <line x1="5%" y1="50%" x2="95%" y2="50%" />
-                  {/* Center Circle */}
-                  <circle cx="50%" cy="50%" r="14%" />
-                  <circle cx="50%" cy="50%" r="2" className="fill-white/80" />
-                  {/* Penalty Box Top */}
-                  <rect x="25%" y="5%" width="50%" height="18%" />
-                  <rect x="36%" y="5%" width="28%" height="7%" />
-                  <circle cx="50%" cy="17%" r="2" className="fill-white/80" />
-                  {/* Penalty Box Bottom */}
-                  <rect x="25%" y="77%" width="50%" height="18%" />
-                  <rect x="36%" y="88%" width="28%" height="7%" />
-                  <circle cx="50%" cy="83%" r="2" className="fill-white/80" />
-                </svg>
-
-                {/* Dynamic Player Tokens with Phase Shift Physics */}
-                {heroPositions.map((player) => {
-                  const isSelected = selectedPlayerId === player.id;
-                  const shifted = getShiftedPosition(player, tacticalPhase);
-
-                  return (
-                    <motion.div
-                      key={player.id}
-                      layout
-                      initial={{ scale: 0 }}
-                      animate={{
-                        scale: 1,
-                        left: `${shifted.x}%`,
-                        top: `${shifted.y}%`,
-                      }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 340,
-                        damping: 26,
-                      }}
-                      className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center cursor-pointer group p-1"
-                      onClick={() => setSelectedPlayerId(player.id)}
-                    >
-                      {/* Player Token Circle */}
-                      <div
-                        className={`w-[24px] h-[24px] sm:w-[28px] sm:h-[28px] md:w-8 md:h-8 rounded-full flex items-center justify-center font-black text-[9px] sm:text-[10px] md:text-xs transition-all shadow-md ${
-                          isSelected
-                            ? 'bg-emerald-400 text-slate-950 ring-3 sm:ring-4 ring-emerald-300/60 scale-120 sm:scale-125'
-                            : isLight
-                            ? 'bg-white border-2 border-emerald-500 text-slate-900 group-hover:scale-115 group-hover:border-emerald-600'
-                            : 'bg-black border-2 border-emerald-400 text-white group-hover:scale-115 group-hover:border-emerald-300'
-                        }`}
-                      >
-                        {player.label}
-                      </div>
-
-                      {/* Position Tag */}
-                      <span
-                        className={`text-[7px] sm:text-[8px] md:text-[9px] font-bold px-1 sm:px-1.5 py-0.2 rounded mt-0.5 tracking-tight uppercase shadow-sm border ${
-                          isSelected
-                            ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-extrabold'
-                            : isLight
-                            ? 'bg-white/95 text-slate-800 border-slate-300'
-                            : 'bg-black/90 text-neutral-200 border-neutral-800'
-                        }`}
-                      >
-                        {player.role}
-                      </span>
-                    </motion.div>
-                  );
-                })}
-
-                {/* Floating Tactical Badges & Phase Indicator */}
-                <div className="absolute top-1.5 sm:top-2 left-1.5 sm:left-2 z-30 bg-black/90 backdrop-blur-md border border-emerald-500/40 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[9px] sm:text-xs font-bold text-emerald-300 shadow-md flex items-center gap-1 sm:gap-1.5">
-                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>
-                    {tacticalPhase === 'attack'
-                      ? 'Attacking Overload (xG +2.4)'
-                      : tacticalPhase === 'defense'
-                      ? 'Compact Mid-Block (xGA -0.3)'
-                      : 'Positional Base: xG +1.92'}
+                  <span className="text-[11px] sm:text-xs font-bold text-white whitespace-nowrap">
+                    Custom Formations
                   </span>
                 </div>
 
-                <div className="absolute bottom-1.5 sm:bottom-2 right-1.5 sm:right-2 z-30 bg-black/90 backdrop-blur-md border border-amber-500/40 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[9px] sm:text-xs font-bold text-amber-300 shadow-md flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-400" />
-                  <span>
-                    {tacticalPhase === 'attack'
-                      ? 'Box Entry Overload'
-                      : tacticalPhase === 'defense'
-                      ? 'Rest Defense Safe'
-                      : 'High Press Zone'}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/60 border border-emerald-500/35 backdrop-blur-md">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-950/70 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                    <PenTool className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+                  <span className="text-[11px] sm:text-xs font-bold text-white whitespace-nowrap">
+                    Tactical Drawing Tools
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/60 border border-emerald-500/35 backdrop-blur-md">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-950/70 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                    <Layers className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+                  <span className="text-[11px] sm:text-xs font-bold text-white whitespace-nowrap">
+                    Realistic Turf &amp; Textures
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/60 border border-emerald-500/35 backdrop-blur-md">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-950/70 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                    <PlayCircle className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+                  <span className="text-[11px] sm:text-xs font-bold text-white whitespace-nowrap">
+                    Animated Sequences
                   </span>
                 </div>
               </div>
 
-              {/* Bottom Player Tactical Instruction & Launch Bar */}
-              <div className={`p-2 sm:p-3 rounded-b-xl sm:rounded-b-2xl flex items-center justify-between border-t gap-2 ${
-                isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-black border-neutral-800 text-white'
-              }`}>
-                <div className="flex items-center gap-2 text-xs truncate min-w-0 flex-1">
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full font-black flex items-center justify-center text-[9px] sm:text-[10px] shrink-0 bg-emerald-500 text-slate-950">
-                    {activePlayer.label}
-                  </div>
-                  <div className="truncate min-w-0 flex-1">
-                    <p className={`font-bold text-[11px] sm:text-xs truncate ${isLight ? 'text-slate-950' : 'text-white'}`}>
-                      {activePlayer.name} ({activePlayer.role})
-                    </p>
-                    <p className={`text-[10px] sm:text-[11px] truncate ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
-                      {activePlayer.instruction}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => onLaunchBoard(selectedFormationKey)}
-                  className="w-auto px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition shadow-sm shrink-0 cursor-pointer active:scale-95 bg-emerald-500 hover:bg-emerald-400 text-slate-950 whitespace-nowrap"
+              {/* CTAs (Start Creating Now & Explore Features) */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 w-full sm:w-auto">
+                {/* Primary CTA: Start Creating Now */}
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => onLaunchBoard('4-3-3')}
+                  className="px-7 sm:px-9 py-3.5 sm:py-4 rounded-full bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-sm sm:text-base tracking-wide flex items-center justify-center gap-3 shadow-[0_0_24px_rgba(16,185,129,0.35)] transition-all cursor-pointer group border border-emerald-200/50"
                 >
-                  <span>Edit in Studio</span>
-                  <SvgLuxuryArrow className="w-3.5 h-3.5" />
-                </button>
+                  <Play className="w-4 h-4 fill-slate-950 text-slate-950 shrink-0" />
+                  <span className="whitespace-nowrap font-black">Start Creating Now</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform shrink-0" />
+                </motion.button>
+
+                {/* Secondary CTA: Explore Features */}
+                <motion.a
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  href="#features"
+                  className="px-6 sm:px-7 py-3.5 sm:py-4 rounded-full bg-black/70 hover:bg-black/90 border border-emerald-500/50 hover:border-emerald-400 text-white font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 backdrop-blur-md shadow-lg transition-all cursor-pointer"
+                >
+                  <span className="text-emerald-400 text-xs">◇</span>
+                  <span className="whitespace-nowrap">Explore Features</span>
+                </motion.a>
+              </div>
+
+              {/* Microcopy: No installation required • Works on all devices */}
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-300/85 pt-0.5">
+                <Laptop className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>No installation required</span>
+                <span className="text-emerald-500/80">•</span>
+                <span>Works on all devices</span>
+              </div>
+
+              {/* Mobile Tablet Preview Card (visible on mobile / tablet < lg) */}
+              <div className="w-full lg:hidden pt-3">
+                <div className="relative rounded-2xl overflow-hidden border border-emerald-500/40 bg-black/80 shadow-2xl shadow-emerald-950/60 group">
+                  <picture className="w-full h-auto block">
+                    <source srcSet="/hero_tablet_mobile.webp" type="image/webp" />
+                    <img
+                      src="/hero_tablet_mobile.png"
+                      alt="Be Coach Football Tactical Board 4-3-3 Studio"
+                      className="w-full h-auto object-cover"
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                    />
+                  </picture>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between pointer-events-none">
+                    <span className="px-2.5 py-1 rounded-lg bg-black/85 border border-emerald-500/50 text-[10px] font-bold text-emerald-300 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      4-3-3 Tactical HUD
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onLaunchBoard('4-3-3')}
+                      className="pointer-events-auto px-3 py-1.5 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs font-black shadow-lg flex items-center gap-1 active:scale-95 transition-transform"
+                    >
+                      <span>Open Board</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Proof Box: Trusted by 50,000+ coaches */}
+              <div className="inline-flex items-center gap-3.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-black/75 border border-emerald-500/30 backdrop-blur-md shadow-xl shadow-emerald-950/40">
+                <img
+                  src="/coach_avatars.png"
+                  alt="Trusted Football Coaches"
+                  className="h-7 sm:h-8 w-auto object-contain rounded-full shadow-md shrink-0"
+                  loading="eager"
+                  decoding="async"
+                />
+                <div className="text-left leading-tight">
+                  <p className="text-[11px] sm:text-xs font-semibold text-slate-200">
+                    Trusted by <strong className="text-white font-extrabold">50,000+ coaches</strong> and football enthusiasts worldwide
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[#10B981] text-xs tracking-tight">
+                      ★★★★★
+                    </span>
+                    <span className="text-[11px] font-black text-emerald-300">
+                      4.9/5
+                    </span>
+                  </div>
+                </div>
               </div>
 
             </div>
-          </motion.div>
+
+            {/* Right Column (Desktop / Widescreen) */}
+            <div className="hidden lg:flex lg:col-span-5 xl:col-span-6 relative justify-end items-center h-full min-h-[580px]">
+              {/* Interactive Hotspot to Launch Board with 4-3-3 */}
+              <div
+                onClick={() => onLaunchBoard('4-3-3')}
+                title="Click to launch 4-3-3 formation in tactical studio"
+                className="absolute inset-0 cursor-pointer group"
+              >
+                {/* Subtle Interactive Hover Highlight Ring */}
+                <div className="absolute top-[28%] right-[5%] w-[85%] h-[65%] rounded-3xl border border-emerald-400/0 group-hover:border-emerald-400/40 transition-colors pointer-events-none group-hover:shadow-[0_0_40px_rgba(16,185,129,0.2)]" />
+              </div>
+            </div>
+
+          </div>
+
+          {/* Bottom Center: Scroll To Explore Animated Indicator */}
+          <div className="w-full flex flex-col items-center justify-center pt-6 sm:pt-10 pb-1 select-none">
+            <a
+              href="#features"
+              className="flex flex-col items-center gap-2 group cursor-pointer"
+            >
+              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.25em] text-emerald-300/80 group-hover:text-emerald-300 transition-colors">
+                Scroll To Explore
+              </span>
+              <motion.div
+                animate={{ y: [0, 8, 0], opacity: [0.6, 1, 0.6] }}
+                transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+                className="w-[2px] h-7 bg-gradient-to-b from-emerald-400 to-transparent rounded-full shadow-[0_0_8px_rgba(0,255,136,0.7)]"
+              />
+            </a>
+          </div>
 
         </div>
       </section>
