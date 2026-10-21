@@ -525,7 +525,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <picture className="w-full h-full block">
             <source srcSet="/hero_showcase_bg.webp" type="image/webp" />
             <img
-              src="/hero_showcase_bg.png"
+              src="/hero_showcase_bg.webp"
               alt="Be Coach Tactical Board Studio"
               className="w-full h-full object-cover object-right md:object-center opacity-90 lg:opacity-100"
               loading="eager"
@@ -682,10 +682,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               {/* Social Proof Box: Trusted by 50,000+ coaches */}
               <div className="inline-flex items-center gap-3.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-black/75 border border-emerald-500/30 backdrop-blur-md shadow-xl shadow-emerald-950/40">
                 <img
-                  src="/coach_avatars.png"
+                  src="/coach_avatars.webp"
                   alt="Trusted Football Coaches"
                   className="h-7 sm:h-8 w-auto object-contain rounded-full shadow-md shrink-0"
                   loading="eager"
+                  fetchPriority="high"
                   decoding="async"
                 />
                 <div className="text-left leading-tight">

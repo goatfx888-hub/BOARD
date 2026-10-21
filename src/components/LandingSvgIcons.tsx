@@ -8,12 +8,13 @@ interface SvgProps {
 // 1. Professional Football Coach & Tactical Board Vector Logo (Be Coach Official Emblem)
 export const SvgBeCoachLogo: React.FC<SvgProps> = ({ className = 'w-6 h-6', size }) => (
   <img
-    src="/assets/aistudio/_______________________________5bb7d35c.png"
+    src="/becoach_logo.webp"
     alt="Be Coach Logo"
     className={`inline-block object-contain select-none pointer-events-none ${className}`}
     width={size}
     height={size}
     loading="eager"
+    fetchPriority="high"
     decoding="async"
   />
 );
