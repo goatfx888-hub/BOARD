@@ -1,6 +1,6 @@
 {
   "name": "Remix Remix Remix Remix 04/09/2026 -21:48 second",
-  "description": "Realistic football pitch builder and tactical squad manager with precise markings, custom formations, player cards, and kit customization.",
+  "description": "Elite football tactical board and 11v11 lineup builder. Analyze and create matchday tactics for Real Madrid, FC Barcelona, LaLiga, and Champions League with custom formations, tactical drawing, and animated sequences.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
