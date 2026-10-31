@@ -78,14 +78,18 @@
         }, true);
       })();
     </script>
-    <meta name="monetag" content="59eec044a3fb03ae131fd93c10c7e9c4">
+    <!-- Ezoic Privacy & Consent Scripts (Must be loaded first for compliance) -->
+    <script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></script>
+    <script data-cfasync="false" src="https://the.gatekeeperconsent.com/cmp.min.js"></script>
+
+    <!-- Ezoic Header Script (Initializes ad system & analytics) -->
+    <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
     <script>
-      if (typeof window !== 'undefined' && !window.location.hostname.includes('ais-dev')) {
-        try {
-          (function(s){s.dataset.zone='11848426',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
-        } catch (_) {}
-      }
+      window.ezstandalone = window.ezstandalone || {};
+      ezstandalone.cmd = ezstandalone.cmd || [];
     </script>
+    <script src="//ezoicanalytics.com/analytics.js"></script>
+
     <!-- Google AdSense -->
     <script
       async
