@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ChevronDown,
@@ -9,30 +9,27 @@ import {
   X,
   FileText,
   Lock,
-  Activity,
-  Flame,
-  Radio,
-  Sparkles,
-  Crosshair,
-  RotateCcw,
+  Volume2,
+  VolumeX,
+  Maximize2,
   Play,
   ArrowRight,
-  Star,
-  PenTool,
-  LayoutGrid,
-  Layers,
-  PlayCircle,
-  Laptop,
+  Trophy,
+  TrendingUp,
   Users,
+  Zap,
+  Search,
+  RotateCcw,
+  Sparkles,
+  SlidersHorizontal,
+  Layers,
+  LayoutGrid,
 } from 'lucide-react';
 import { LegalTabType } from './LegalModal';
 import { useTheme } from '../context/ThemeContext';
+import { ThreeTacticalCanvas } from './ThreeTacticalCanvas';
 import {
   SvgBeCoachLogo,
-  SvgCoachLogo,
-  SvgFootballBall,
-  SvgLuxuryCrest,
-  SvgMatchClash,
   SvgTurfStadium,
   SvgKeyframeFilm,
   SvgDrawingTactics,
@@ -41,10 +38,8 @@ import {
   SvgCrownStar,
   SvgLuxuryArrow,
   SvgLuxuryPlay,
-  SvgLuxuryCheck,
   SvgDiamondBadge,
-  SvgDarkModePro,
-  SvgLightModePro,
+  SvgMatchClash,
 } from './LandingSvgIcons';
 
 interface LandingPageProps {
@@ -52,7 +47,7 @@ interface LandingPageProps {
   onOpenLegal: (tab: LegalTabType) => void;
 }
 
-// Mini-pitch animated preview positions for the Hero showcase
+// Mini-pitch animated preview positions for the Tactical Sandbox section
 interface HeroPlayer {
   id: string;
   x: number;
@@ -148,45 +143,43 @@ const FAQ_ITEMS = [
       'The Keyframe Studio allows you to capture distinct phases of play (e.g. Phase 1: Build-up, Phase 2: Overlap, Phase 3: Box Entry). Once recorded, you can play back the sequence with smooth automated player transitions to illustrate plays dynamically.',
   },
   {
-    question: 'Can I switch between Single-Team view and 11v11 Home vs Away Match mode?',
+    question: 'Can I simulate full 11 vs 11 match clashes between two squads?',
     answer:
-      'Yes. In the studio, toggle between "Home Team", "Away Team", or full "11 vs 11 Matchup" mode to test defensive shape against opposing attacking runs simultaneously.',
-  },
-  {
-    question: 'Are my tactics and custom lineups kept private?',
-    answer:
-      'Yes. All tactical board state, drawings, custom player names, and kit customizations reside exclusively in your local browser session. No tactics are stored on public servers without your explicit action.',
+      'Yes. Toggle Match Mode to "Home vs Away" in the header to populate both teams simultaneously. You can customize kits, formations, and tactical movement for each team independently.',
   },
 ];
 
+// Tactical phase shift calculator for sandbox pitch
 const getShiftedPosition = (
   player: HeroPlayer,
-  phase: 'balanced' | 'attack' | 'defense',
-) => {
-  let { x, y } = player;
-  const role = player.role.toUpperCase();
+  phase: 'balanced' | 'attack' | 'defense'
+): { x: number; y: number } => {
+  let { x, y, role } = player;
 
   if (phase === 'attack') {
     if (role.includes('ST')) {
-      y = Math.max(9, y - 7);
-    } else if (role.includes('LW') || role.includes('RW')) {
-      y = Math.max(14, y - 8);
-      x = role.includes('LW') ? Math.min(x + 5, 29) : Math.max(x - 5, 71);
+      y = Math.max(9, y - 6);
+    } else if (role.includes('RW') || role.includes('LW') || role.includes('RM') || role.includes('LM')) {
+      y = Math.max(12, y - 10);
+      x = role.includes('LW') || role.includes('LM') ? Math.max(x - 5, 8) : Math.min(x + 5, 92);
     } else if (role.includes('CAM') || role.includes('LAM') || role.includes('RAM')) {
-      y = Math.max(22, y - 10);
+      y = Math.max(22, y - 12);
+    } else if (role.includes('CM')) {
+      y = Math.max(30, y - 12);
+    } else if (role.includes('CDM')) {
+      y = Math.max(44, y - 8);
     } else if (role.includes('LB') || role.includes('RB') || role.includes('LWB') || role.includes('RWB')) {
-      y = Math.max(44, y - 22);
-    } else if (role.includes('CM') || role.includes('CDM') || role.includes('LM') || role.includes('RM')) {
-      y = Math.max(34, y - 12);
+      y = Math.max(48, y - 18);
+      x = role.includes('LB') || role.includes('LWB') ? Math.max(x - 6, 8) : Math.min(x + 6, 92);
     } else if (role.includes('CB')) {
-      y = Math.max(60, y - 14);
+      y = Math.max(62, y - 10);
     } else if (role.includes('GK')) {
-      y = Math.max(78, y - 8);
+      y = Math.max(82, y - 4);
     }
   } else if (phase === 'defense') {
     if (role.includes('ST')) {
-      y = Math.min(38, y + 18);
-    } else if (role.includes('LW') || role.includes('RW') || role.includes('LM') || role.includes('RM')) {
+      y = Math.min(38, y + 16);
+    } else if (role.includes('RW') || role.includes('LW') || role.includes('RM') || role.includes('LM')) {
       y = Math.min(56, y + 18);
       x = role.includes('LW') || role.includes('LM') ? Math.min(x + 7, 28) : Math.max(x - 7, 72);
     } else if (role.includes('CAM') || role.includes('LAM') || role.includes('RAM')) {
@@ -207,79 +200,33 @@ const getShiftedPosition = (
   return { x, y };
 };
 
-const HeroPlayerMarker: React.FC<{
-  player: HeroPlayer;
-  phase: 'balanced' | 'attack' | 'defense';
-  isSelected: boolean;
-  onClick: () => void;
-}> = ({ player, phase, isSelected, onClick }) => {
-  const { x, y } = getShiftedPosition(player, phase);
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      animate={{ left: `${x}%`, top: `${y}%` }}
-      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-      className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center group cursor-pointer focus:outline-none"
-    >
-      <div
-        className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center font-black text-[9px] sm:text-[10px] shadow-lg transition-transform duration-200 group-hover:scale-125 ${
-          isSelected
-            ? 'bg-amber-400 text-slate-950 ring-2 ring-white scale-110'
-            : 'bg-emerald-400 text-slate-950 ring-1 ring-emerald-950/40'
-        }`}
-      >
-        {player.label}
-      </div>
-      <span
-        className={`text-[8px] sm:text-[9px] font-bold px-1 rounded mt-0.5 whitespace-nowrap shadow-sm pointer-events-none ${
-          isSelected ? 'bg-amber-400 text-slate-950 font-black' : 'bg-black/80 text-white'
-        }`}
-      >
-        {player.name}
-      </span>
-    </motion.button>
-  );
-};
-
-const PitchSurfaceBackground: React.FC<{ isLight: boolean }> = () => (
-  <div className="absolute inset-0 bg-[#0f2e1b]">
-    <div className="absolute inset-0 flex flex-col">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div
-          key={i}
-          className={`flex-1 ${i % 2 === 0 ? 'bg-white/[0.04]' : 'bg-transparent'}`}
-        />
-      ))}
-    </div>
-  </div>
-);
-
-const PitchTacticalMarkings: React.FC<{ isLight: boolean }> = () => (
-  <svg
-    className="absolute inset-0 w-full h-full pointer-events-none"
-    viewBox="0 0 100 100"
-    preserveAspectRatio="none"
-  >
-    <rect x="4" y="4" width="92" height="92" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
-    <line x1="4" y1="50" x2="96" y2="50" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
-    <circle cx="50" cy="50" r="12" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
-    <circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.8)" />
-    <rect x="25" y="4" width="50" height="16" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
-    <rect x="36" y="4" width="28" height="6" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
-    <rect x="25" y="80" width="50" height="16" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
-    <rect x="36" y="90" width="28" height="6" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+const SvgBeCoachCrown: React.FC<{ className?: string }> = ({ className = 'w-8 h-8' }) => (
+  <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <defs>
+      <linearGradient id="crownGradPro" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f3e8ff" />
+        <stop offset="30%" stopColor="#c084fc" />
+        <stop offset="70%" stopColor="#a855f7" />
+        <stop offset="100%" stopColor="#7c3aed" />
+      </linearGradient>
+      <filter id="crownProGlow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="1.8" result="glow" />
+        <feComposite in="SourceGraphic" in2="glow" operator="over" />
+      </filter>
+    </defs>
+    <path
+      d="M7 16L13 32H31L37 16L27 23.5L22 9L17 23.5L7 16Z"
+      fill="url(#crownGradPro)"
+      filter="url(#crownProGlow)"
+    />
+    <circle cx="7" cy="16" r="2.2" fill="#ffffff" />
+    <circle cx="22" cy="9" r="2.8" fill="#ffffff" />
+    <circle cx="37" cy="16" r="2.2" fill="#ffffff" />
+    <rect x="12" y="34" width="20" height="3.5" rx="1.75" fill="#a855f7" />
+    <circle cx="16.5" cy="35.75" r="0.9" fill="#ffffff" />
+    <circle cx="22" cy="35.75" r="1.1" fill="#ffffff" />
+    <circle cx="27.5" cy="35.75" r="0.9" fill="#ffffff" />
   </svg>
-);
-
-const PitchChannelZones: React.FC = () => (
-  <div className="absolute inset-0 pointer-events-none grid grid-cols-5 border-x border-white/10 z-10">
-    <div className="border-r border-dashed border-teal-400/25 bg-teal-500/[0.04]" />
-    <div className="border-r border-dashed border-emerald-400/25 bg-emerald-500/[0.04]" />
-    <div className="border-r border-dashed border-teal-400/25 bg-teal-500/[0.04]" />
-    <div className="border-r border-dashed border-emerald-400/25 bg-emerald-500/[0.04]" />
-    <div className="bg-teal-500/[0.04]" />
-  </div>
 );
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -289,453 +236,408 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const { theme, toggleTheme } = useTheme();
   const isLight = theme === 'light';
 
+  // 3D Video & Parallax Stage States
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const mainVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Formation Sandbox & UI States
   const [selectedFormationKey, setSelectedFormationKey] =
     useState<keyof typeof HERO_FORMATIONS>('4-3-3');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [tacticalPhase, setTacticalPhase] = useState<'balanced' | 'attack' | 'defense'>('balanced');
   const [showZones, setShowZones] = useState<boolean>(true);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
-  const [activePreviewTab, setActivePreviewTab] = useState<'pitch' | 'tactics' | 'kit'>('pitch');
+  const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Tactical Analysis State
-  const [tacticalPhase, setTacticalPhase] = useState<'balanced' | 'attack' | 'defense'>('balanced');
+  // Auto-play video on mount
+  useEffect(() => {
+    if (mainVideoRef.current) {
+      mainVideoRef.current.muted = isVideoMuted;
+      mainVideoRef.current.play().catch(() => {});
+    }
+  }, [isVideoMuted]);
+
+  const toggleVideoAudio = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const nextMuted = !isVideoMuted;
+    setIsVideoMuted(nextMuted);
+    if (mainVideoRef.current) {
+      mainVideoRef.current.muted = nextMuted;
+      if (!nextMuted) {
+        mainVideoRef.current.play().catch(() => {});
+      }
+    }
+  };
+
+  const handleFullscreenVideo = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (mainVideoRef.current) {
+      if (mainVideoRef.current.requestFullscreen) {
+        mainVideoRef.current.requestFullscreen();
+      }
+    }
+  };
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const q = searchQuery.trim().toLowerCase();
+    if (q.includes('4-4-2') || q.includes('442')) {
+      onLaunchBoard('4-4-2');
+    } else if (q.includes('3-5-2') || q.includes('352')) {
+      onLaunchBoard('3-5-2');
+    } else if (q.includes('5-3-2') || q.includes('532')) {
+      onLaunchBoard('5-3-2');
+    } else if (q.includes('4-2-3-1') || q.includes('4231')) {
+      onLaunchBoard('4-2-3-1');
+    } else if (q.includes('train') || q.includes('drill') || q.includes('keyframe')) {
+      const el = document.getElementById('keyframes');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      else onLaunchBoard('4-3-3');
+    } else if (q.includes('feature')) {
+      const el = document.getElementById('features');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      else onLaunchBoard('4-3-3');
+    } else {
+      onLaunchBoard('4-3-3');
+    }
+  };
 
   const heroPositions = HERO_FORMATIONS[selectedFormationKey] || HERO_FORMATIONS['4-3-3'];
-  const activePlayer = heroPositions.find((p) => p.id === selectedPlayerId) || heroPositions[9]; // default to striker
+  const activePlayer = heroPositions.find((p) => p.id === selectedPlayerId) || heroPositions[9];
 
   return (
     <div
       className={`min-h-screen flex flex-col font-sans overflow-x-hidden transition-colors duration-200 ${
         isLight
-          ? 'bg-slate-50 text-slate-900 selection:bg-emerald-500 selection:text-slate-950'
-          : 'bg-black text-slate-100 selection:bg-emerald-500 selection:text-slate-950'
+          ? 'bg-slate-50 text-slate-900 selection:bg-purple-500 selection:text-white'
+          : 'bg-[#070312] text-slate-100 selection:bg-purple-500 selection:text-white'
       }`}
     >
       {/* ========================================================================= */}
-      {/* NAVIGATION BAR */}
+      {/* 3D IMMERSIVE HERO VIEWPORT & MAIN VIDEO CENTERPIECE */}
       {/* ========================================================================= */}
-      <header
-        className={`sticky top-0 z-50 backdrop-blur-2xl px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 transition-all ${
-          isLight
-            ? 'bg-white/95 border-b border-slate-200 shadow-sm'
-            : 'bg-black/95 border-b border-neutral-800 shadow-2xl'
-        }`}
+      <section
+        className="relative w-full overflow-hidden bg-[#070312] text-white pt-4 sm:pt-6 pb-12 sm:pb-16"
       >
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+        {/* Three.js Interactive 3D Stadium & Tactical Particle Scene */}
+        <ThreeTacticalCanvas isLight={false} />
+
+        {/* Ambient Volumetric Radial Lighting behind the Hero Section */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-gradient-to-tr from-purple-900/35 via-violet-600/20 to-transparent rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-indigo-900/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 left-0 w-[500px] h-[500px] bg-purple-950/30 rounded-full blur-[120px] pointer-events-none" />
+
+        {/* Content Container */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-6 sm:gap-8">
           
-          {/* Luxury Football Logo Brand */}
-          <div
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none shrink-0"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 group">
-              <SvgBeCoachLogo className="w-full h-full drop-shadow-md group-hover:scale-105 transition-transform duration-300 rounded-lg" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5 leading-none">
-                <span
-                  className={`font-black text-xs sm:text-sm md:text-base tracking-normal uppercase ${
-                    isLight ? 'text-slate-950' : 'text-white'
-                  }`}
-                >
-                  <span className="text-emerald-500 font-extrabold italic mr-0.5">BE</span> COACH
-                </span>
+          {/* ===================================================================== */}
+          {/* 1. TOP MINIMAL NAVIGATION BAR */}
+          {/* ===================================================================== */}
+          <header className="w-full flex items-center justify-between gap-4 pb-4 border-b border-purple-500/20">
+            {/* Brand Logo & Wordmark */}
+            <div
+              className="flex items-center gap-3 cursor-pointer select-none group"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
+                <SvgBeCoachCrown className="w-full h-full drop-shadow-[0_0_16px_rgba(168,85,247,0.85)] group-hover:scale-105 transition-transform duration-200" />
               </div>
-              <p className={`text-[10px] font-medium tracking-normal hidden sm:block mt-0.5 ${
-                isLight ? 'text-emerald-700/80 font-medium' : 'text-emerald-600 dark:text-emerald-400/80'
-              }`}>
-                Elite Football Tactical Board
-              </p>
+              <span className="font-black text-2xl sm:text-3xl tracking-tight text-white flex items-center">
+                Be&nbsp;<span className="text-[#c084fc] font-extrabold">Coach</span>
+              </span>
             </div>
-          </div>
 
-          {/* Center Navigation Links with Professional Typography */}
-          <nav
-            className={`hidden lg:flex items-center gap-5 xl:gap-8 text-xs font-semibold tracking-wider uppercase whitespace-nowrap ${
-              isLight ? 'text-slate-700' : 'text-neutral-300'
-            }`}
-          >
-            <a href="#features" className={isLight ? "hover:text-emerald-600 transition-colors" : "hover:text-emerald-500 transition-colors"}>Features</a>
-            <a href="#pitch-styles" className={isLight ? "hover:text-emerald-600 transition-colors" : "hover:text-emerald-500 transition-colors"}>Turf &amp; Textures</a>
-            <a href="#formations" className={isLight ? "hover:text-emerald-600 transition-colors" : "hover:text-emerald-500 transition-colors"}>Formations</a>
-            <a href="#keyframes" className={isLight ? "hover:text-emerald-600 transition-colors" : "hover:text-emerald-500 transition-colors"}>Keyframe Studio</a>
-            <a href="#faq" className={isLight ? "hover:text-emerald-600 transition-colors" : "hover:text-emerald-500 transition-colors"}>FAQ</a>
-          </nav>
-
-          {/* Action Group (Without Redundant Header CTA) */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            {/* Light / Dark Mode Toggle */}
-            <button
-              onClick={toggleTheme}
-              className={`p-2 rounded-xl border transition cursor-pointer flex items-center justify-center active:scale-95 ${
-                isLight
-                  ? 'border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 shadow-sm'
-                  : 'border-neutral-800 bg-neutral-900/90 hover:bg-neutral-800 text-neutral-300 hover:text-white'
-              }`}
-              title={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-              aria-label="Toggle Theme"
-            >
-              {isLight ? (
-                <SvgDarkModePro className="w-4 h-4 drop-shadow-sm" />
-              ) : (
-                <SvgLightModePro className="w-4 h-4 drop-shadow-sm" />
-              )}
-            </button>
-
-            <button
-              onClick={() => onOpenLegal('guide')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition active:scale-95 whitespace-nowrap cursor-pointer ${
-                isLight
-                  ? 'border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 shadow-sm'
-                  : 'border-neutral-800 bg-neutral-900/90 hover:bg-neutral-800 text-neutral-300'
-              }`}
-            >
-              <SvgDiamondBadge className={`w-3.5 h-3.5 ${isLight ? 'text-emerald-600' : 'text-emerald-500'}`} />
-              <span>User Guide</span>
-            </button>
-
-            {/* Mobile & Tablet Hamburger Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`lg:hidden p-2 rounded-xl border transition active:scale-95 flex items-center justify-center shrink-0 ${
-                isLight
-                  ? 'bg-slate-100 border-slate-200 text-slate-800'
-                  : 'bg-neutral-900/90 border-neutral-800 text-neutral-300 hover:text-white'
-              }`}
-              aria-label="Toggle Navigation Menu"
-            >
-              {mobileMenuOpen ? (
-                <X className={`w-4 h-4 ${isLight ? 'text-slate-800' : 'text-emerald-500'}`} />
-              ) : (
-                <Menu className={`w-4 h-4 ${isLight ? 'text-slate-800' : 'text-emerald-500'}`} />
-              )}
-            </button>
-          </div>
-
-        </div>
-
-        {/* Mobile & Tablet Quick Nav Dropdown */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`lg:hidden pt-3 pb-2 mt-2 border-t flex flex-col gap-1.5 text-xs font-display font-semibold ${
-                isLight ? 'border-slate-200 text-slate-800' : 'border-neutral-800 text-neutral-300'
-              }`}
-            >
+            {/* Desktop Navigation Links */}
+            <nav className="hidden md:flex items-center gap-1 lg:gap-2 text-xs lg:text-sm font-semibold">
               <a
                 href="#features"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center justify-between px-3.5 py-3 rounded-xl active:scale-[0.99] transition ${
-                  isLight ? 'bg-slate-100 hover:bg-slate-200 border border-slate-200' : 'bg-neutral-900 border border-neutral-800'
-                }`}
+                className="px-3.5 py-2 rounded-lg text-purple-200/80 hover:text-white hover:bg-purple-900/40 transition-colors"
               >
-                <div className="flex items-center gap-2.5">
-                  <SvgMatchClash className={`w-4 h-4 ${isLight ? 'text-emerald-600' : 'text-emerald-500'}`} />
-                  <span>Tactical Features</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
+                Features
               </a>
-
-              <a
-                href="#pitch-styles"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center justify-between px-3.5 py-3 rounded-xl active:scale-[0.99] transition ${
-                  isLight ? 'bg-slate-100 hover:bg-slate-200 border border-slate-200' : 'bg-neutral-900 border border-neutral-800'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <SvgTurfStadium className={`w-4 h-4 ${isLight ? 'text-teal-600' : 'text-teal-500'}`} />
-                  <span>Turf Textures &amp; Lighting</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
-              </a>
-
               <a
                 href="#formations"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center justify-between px-3.5 py-3 rounded-xl active:scale-[0.99] transition ${
-                  isLight ? 'bg-slate-100 hover:bg-slate-200 border border-slate-200' : 'bg-neutral-900 border border-neutral-800'
-                }`}
+                className="px-3.5 py-2 rounded-lg text-purple-200/80 hover:text-white hover:bg-purple-900/40 transition-colors"
               >
-                <div className="flex items-center gap-2.5">
-                  <SvgDiamondBadge className={`w-4 h-4 ${isLight ? 'text-emerald-600' : 'text-emerald-500'}`} />
-                  <span>Presets &amp; Formations</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
+                Formations
               </a>
-
               <a
-                href="#keyframes"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center justify-between px-3.5 py-3 rounded-xl active:scale-[0.99] transition ${
-                  isLight ? 'bg-slate-100 hover:bg-slate-200 border border-slate-200' : 'bg-neutral-900 border border-neutral-800'
-                }`}
+                href="#sandbox"
+                className="px-3.5 py-2 rounded-lg text-purple-200/80 hover:text-white hover:bg-purple-900/40 transition-colors"
               >
-                <div className="flex items-center gap-2.5">
-                  <SvgKeyframeFilm className="w-4 h-4 text-amber-500" />
-                  <span>Keyframe Movement Studio</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
+                Tactics Sandbox
               </a>
-
               <a
                 href="#faq"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center justify-between px-3.5 py-3 rounded-xl active:scale-[0.99] transition ${
-                  isLight ? 'bg-slate-100 hover:bg-slate-200 border border-slate-200' : 'bg-neutral-900 border border-neutral-800'
-                }`}
+                className="px-3.5 py-2 rounded-lg text-purple-200/80 hover:text-white hover:bg-purple-900/40 transition-colors"
               >
-                <div className="flex items-center gap-2.5">
-                  <SvgCrownStar className="w-4 h-4 text-amber-500" />
-                  <span>FAQ &amp; Knowledge Base</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
+                FAQ
               </a>
+            </nav>
+
+            {/* Right Controls: Search, Sound Toggle, Theme, Launch Studio */}
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search tactics..."
+                  className="w-36 lg:w-44 pl-8 pr-3 py-2 rounded-lg bg-purple-950/60 border border-purple-500/30 text-white placeholder-purple-300/40 text-xs focus:outline-none focus:border-purple-400 focus:w-52 transition-all"
+                />
+                <Search className="w-3.5 h-3.5 text-purple-400 absolute left-2.5 pointer-events-none" />
+              </form>
 
               <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenLegal('guide');
-                }}
-                className={`flex items-center justify-between px-3.5 py-3 rounded-xl active:scale-[0.99] transition text-left cursor-pointer ${
-                  isLight ? 'bg-slate-100 hover:bg-slate-200 border border-slate-200' : 'bg-neutral-900 border border-neutral-800'
-                }`}
+                type="button"
+                onClick={toggleVideoAudio}
+                className="px-3 py-2 rounded-lg bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-md"
+                title={isVideoMuted ? 'Unmute video audio' : 'Mute video audio'}
               >
-                <div className="flex items-center gap-2.5">
-                  <SvgDiamondBadge className={`w-4 h-4 ${isLight ? 'text-emerald-600' : 'text-emerald-500'}`} />
-                  <span>Coaching User Guide</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
+                {isVideoMuted ? (
+                  <>
+                    <VolumeX className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="hidden sm:inline">Sound Off</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3.5 h-3.5 text-purple-300 animate-pulse" />
+                    <span className="hidden sm:inline">Sound On</span>
+                  </>
+                )}
               </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </header>
 
-      {/* ========================================================================= */}
-      {/* HERO SECTION: INSPIRATION DESIGN (BE COACH AND SHOW US YOUR IDEAS) */}
-      {/* ========================================================================= */}
-      <section className="relative w-full overflow-hidden bg-black text-white">
-        {/* Full-bleed Panoramic Background (Fast WebP with fallback) */}
-        <div className="absolute inset-0 z-0">
-          <picture className="w-full h-full block">
-            <source srcSet="/hero_showcase_bg.webp" type="image/webp" />
-            <img
-              src="/hero_showcase_bg.webp"
-              alt="Be Coach Tactical Board Studio"
-              className="w-full h-full object-cover object-right md:object-center opacity-90 lg:opacity-100"
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-            />
-          </picture>
-          {/* Subtle left-side atmospheric vignette for absolute text clarity */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/80 to-transparent lg:from-black/90 lg:via-black/60 lg:to-transparent pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 pointer-events-none" />
-        </div>
-
-        {/* Hero Content Container */}
-        <div className="relative z-10 w-full max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-16 pt-8 sm:pt-14 lg:pt-16 pb-8 sm:pb-12 min-h-[720px] lg:min-h-[860px] xl:min-h-[920px] flex flex-col justify-between">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            
-            {/* Left Column: Tactical Pitch Studio Messaging & Actions */}
-            <div className="lg:col-span-7 xl:col-span-6 flex flex-col items-start text-left space-y-5 sm:space-y-6 max-w-2xl">
-              
-              {/* Badge: THE ULTIMATE FOOTBALL TACTICAL BOARD */}
-              <div className="inline-flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full bg-black/75 border border-emerald-500/40 backdrop-blur-md shadow-lg shadow-emerald-950/40">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-                </span>
-                <span className="text-[10px] sm:text-[11px] font-extrabold tracking-widest text-emerald-300 uppercase">
-                  The Ultimate Football Tactical Board
-                </span>
-              </div>
-
-              {/* Main Headline: BE COACH AND SHOW US YOUR IDEAS */}
-              <div className="space-y-1">
-                <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[4rem] xl:text-[4.5rem] font-black uppercase tracking-tight leading-[0.94] text-white">
-                  <span className="block drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
-                    BE COACH AND
-                  </span>
-                  {/* Refined subtle emerald glow (softened neon per request) */}
-                  <span className="block text-[#10B981] italic font-black drop-shadow-[0_2px_14px_rgba(16,185,129,0.35)] mt-1">
-                    SHOW US YOUR IDEAS
-                  </span>
-                </h1>
-              </div>
-
-              {/* Subtitle */}
-              <p className="text-xs sm:text-sm md:text-base lg:text-lg text-slate-200/90 font-medium leading-relaxed max-w-xl drop-shadow-md">
-                Elite football tactical board studio: 11v11 custom formations, tactical drawing tools, realistic turf, and animated matchday sequences.
-              </p>
-
-              {/* 4 Feature Badges (Custom Formations, Tactical Drawing, Realistic Turf, Animated Sequences) */}
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 w-full pt-1">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/60 border border-emerald-500/35 backdrop-blur-md">
-                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-950/70 border border-emerald-500/40 flex items-center justify-center shrink-0">
-                    <LayoutGrid className="w-3.5 h-3.5 text-emerald-400" />
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-bold text-white whitespace-nowrap">
-                    Custom Formations
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/60 border border-emerald-500/35 backdrop-blur-md">
-                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-950/70 border border-emerald-500/40 flex items-center justify-center shrink-0">
-                    <PenTool className="w-3.5 h-3.5 text-emerald-400" />
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-bold text-white whitespace-nowrap">
-                    Tactical Drawing Tools
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/60 border border-emerald-500/35 backdrop-blur-md">
-                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-950/70 border border-emerald-500/40 flex items-center justify-center shrink-0">
-                    <Layers className="w-3.5 h-3.5 text-emerald-400" />
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-bold text-white whitespace-nowrap">
-                    Realistic Turf &amp; Textures
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/60 border border-emerald-500/35 backdrop-blur-md">
-                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-950/70 border border-emerald-500/40 flex items-center justify-center shrink-0">
-                    <PlayCircle className="w-3.5 h-3.5 text-emerald-400" />
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-bold text-white whitespace-nowrap">
-                    Animated Sequences
-                  </span>
-                </div>
-              </div>
-
-              {/* CTAs (Start Creating Now & Explore Features) */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 w-full sm:w-auto">
-                {/* Primary CTA: Start Creating Now */}
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => onLaunchBoard('4-3-3')}
-                  className="px-7 sm:px-9 py-3.5 sm:py-4 rounded-full bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-sm sm:text-base tracking-wide flex items-center justify-center gap-3 shadow-[0_0_24px_rgba(16,185,129,0.35)] transition-all cursor-pointer group border border-emerald-200/50"
-                >
-                  <Play className="w-4 h-4 fill-slate-950 text-slate-950 shrink-0" />
-                  <span className="whitespace-nowrap font-black">Start Creating Now</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform shrink-0" />
-                </motion.button>
-
-                {/* Secondary CTA: Explore Features */}
-                <motion.a
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  href="#features"
-                  className="px-6 sm:px-7 py-3.5 sm:py-4 rounded-full bg-black/70 hover:bg-black/90 border border-emerald-500/50 hover:border-emerald-400 text-white font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 backdrop-blur-md shadow-lg transition-all cursor-pointer"
-                >
-                  <span className="text-emerald-400 text-xs">◇</span>
-                  <span className="whitespace-nowrap">Explore Features</span>
-                </motion.a>
-              </div>
-
-              {/* Microcopy: No installation required • Works on all devices */}
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-300/85 pt-0.5">
-                <Laptop className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>No installation required</span>
-                <span className="text-emerald-500/80">•</span>
-                <span>Works on all devices</span>
-              </div>
-
-              {/* Mobile Tablet Preview Card (visible on mobile / tablet < lg) */}
-              <div className="w-full lg:hidden pt-3">
-                <div className="relative rounded-2xl overflow-hidden border border-emerald-500/40 bg-black/80 shadow-2xl shadow-emerald-950/60 group">
-                  <picture className="w-full h-auto block">
-                    <source srcSet="/hero_tablet_mobile.webp" type="image/webp" />
-                    <img
-                      src="/hero_tablet_mobile.png"
-                      alt="Be Coach Football Tactical Board 4-3-3 Studio"
-                      className="w-full h-auto object-cover"
-                      loading="eager"
-                      fetchPriority="high"
-                      decoding="async"
-                    />
-                  </picture>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-                  <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between pointer-events-none">
-                    <span className="px-2.5 py-1 rounded-lg bg-black/85 border border-emerald-500/50 text-[10px] font-bold text-emerald-300 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      4-3-3 Tactical HUD
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => onLaunchBoard('4-3-3')}
-                      className="pointer-events-auto px-3 py-1.5 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs font-black shadow-lg flex items-center gap-1 active:scale-95 transition-transform"
-                    >
-                      <span>Open Board</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Social Proof Box: Trusted by 50,000+ coaches */}
-              <div className="inline-flex items-center gap-3.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-black/75 border border-emerald-500/30 backdrop-blur-md shadow-xl shadow-emerald-950/40">
-                <img
-                  src="/coach_avatars.webp"
-                  alt="Trusted Football Coaches"
-                  className="h-7 sm:h-8 w-auto object-contain rounded-full shadow-md shrink-0"
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                />
-                <div className="text-left leading-tight">
-                  <p className="text-[11px] sm:text-xs font-semibold text-slate-200">
-                    Trusted by <strong className="text-white font-extrabold">50,000+ coaches</strong> and football enthusiasts worldwide
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-[#10B981] text-xs tracking-tight">
-                      ★★★★★
-                    </span>
-                    <span className="text-[11px] font-black text-emerald-300">
-                      4.9/5
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Right Column (Desktop / Widescreen) */}
-            <div className="hidden lg:flex lg:col-span-5 xl:col-span-6 relative justify-end items-center h-full min-h-[580px]">
-              {/* Interactive Hotspot to Launch Board with 4-3-3 */}
-              <div
-                onClick={() => onLaunchBoard('4-3-3')}
-                title="Click to launch 4-3-3 formation in tactical studio"
-                className="absolute inset-0 cursor-pointer group"
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="p-2 rounded-lg border border-purple-800/40 bg-purple-950/60 hover:bg-purple-900/80 text-purple-200 hover:text-white transition cursor-pointer flex items-center justify-center active:scale-95"
+                title={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                aria-label="Toggle Theme"
               >
-                {/* Subtle Interactive Hover Highlight Ring */}
-                <div className="absolute top-[28%] right-[5%] w-[85%] h-[65%] rounded-3xl border border-emerald-400/0 group-hover:border-emerald-400/40 transition-colors pointer-events-none group-hover:shadow-[0_0_40px_rgba(16,185,129,0.2)]" />
-              </div>
+                {isLight ? <Moon className="w-4 h-4 text-purple-300" /> : <Sun className="w-4 h-4 text-purple-300" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onLaunchBoard('4-3-3')}
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold tracking-wide transition shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-95 cursor-pointer whitespace-nowrap"
+              >
+                Launch Studio
+              </button>
+            </div>
+          </header>
+
+          {/* ===================================================================== */}
+          {/* 2. CENTERED HEADLINE BLOCK */}
+          {/* ===================================================================== */}
+          <div className="w-full max-w-4xl mx-auto text-center space-y-4 pt-4 sm:pt-6">
+            {/* Eyebrow Pill */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-extrabold tracking-widest uppercase shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              <span>Football Tactics &amp; Strategy</span>
             </div>
 
+            {/* Giant Title: BE COACH */}
+            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black italic tracking-tight text-white leading-none">
+              BE <span className="text-[#a855f7] drop-shadow-[0_0_45px_rgba(168,85,247,0.7)]">COACH</span>
+            </h1>
+
+            {/* Subheadline */}
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold italic tracking-tight text-slate-100">
+              Think the game.{' '}
+              <span className="text-[#c084fc] drop-shadow-[0_0_25px_rgba(192,132,252,0.6)]">
+                Master the tactics.
+              </span>
+            </div>
+
+            {/* Description */}
+            <p className="text-sm sm:text-base text-purple-200/80 font-normal leading-relaxed max-w-2xl mx-auto px-4">
+              Explore advanced tactics, simulate 11v11 matchdays, and elevate your coaching with our interactive 3D tactical studio.
+            </p>
           </div>
 
-          {/* Bottom Center: Scroll To Explore Animated Indicator */}
-          <div className="w-full flex flex-col items-center justify-center pt-6 sm:pt-10 pb-1 select-none">
-            <a
-              href="#features"
-              className="flex flex-col items-center gap-2 group cursor-pointer"
+          {/* ===================================================================== */}
+          {/* 3. MAIN CENTERED VIDEO SHOWCASE (BORDERED CARD FRAME) */}
+          {/* ===================================================================== */}
+          <div className="w-full max-w-5xl mx-auto relative perspective-[1400px] pt-1 pb-2">
+            <div className="w-full rounded-2xl sm:rounded-3xl border border-purple-500/30 bg-[#0d0722]/90 shadow-[0_20px_70px_rgba(112,26,117,0.4),0_0_60px_rgba(168,85,247,0.25)] overflow-hidden backdrop-blur-md">
+              {/* Frame Top Bar */}
+              <div className="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-purple-500/20 bg-purple-950/60 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+                  </div>
+                  <span className="text-purple-200/90 font-bold text-[11px] sm:text-xs tracking-wide flex items-center gap-1.5 pl-1">
+                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                    3D Tactical Coach Masterclass
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleVideoAudio}
+                    className="px-2.5 py-1 rounded-md bg-purple-900/60 hover:bg-purple-800/80 text-purple-200 hover:text-white text-[11px] font-semibold flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                    title={isVideoMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {isVideoMuted ? <VolumeX className="w-3 h-3 text-purple-400" /> : <Volume2 className="w-3 h-3 text-purple-300 animate-pulse" />}
+                    <span className="hidden sm:inline">{isVideoMuted ? 'Unmute' : 'Muted'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleFullscreenVideo}
+                    className="p-1 rounded-md bg-purple-900/60 hover:bg-purple-800/80 text-purple-200 hover:text-white transition active:scale-95 cursor-pointer"
+                    title="Fullscreen"
+                  >
+                    <Maximize2 className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Video Player */}
+              <div className="relative w-full aspect-video bg-black">
+                <video
+                  ref={mainVideoRef}
+                  autoPlay
+                  loop
+                  muted={isVideoMuted}
+                  playsInline
+                  poster="/hero_coach_poster.webp"
+                  preload="auto"
+                  className="w-full h-full object-contain sm:object-cover aspect-video"
+                >
+                  <source src="/assets/aistudio/kling_20261101_VIDEO_animate____2080_0_9bd4589e.mp4" type="video/mp4" />
+                  <source src="/hero_coach_video.mp4" type="video/mp4" />
+                </video>
+              </div>
+            </div>
+          </div>
+
+          {/* ===================================================================== */}
+          {/* 4. ACTION BUTTON & INSTANT FORMATION PRESETS DIRECTLY BENEATH VIDEO */}
+          {/* ===================================================================== */}
+          <div className="w-full flex flex-col items-center justify-center space-y-4 pt-1">
+            {/* Centered Explore Tactics Button */}
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => onLaunchBoard('4-3-3')}
+              className="px-9 sm:px-12 py-3.5 sm:py-4 rounded-full bg-gradient-to-r from-[#7c3aed] via-[#8b5cf6] to-[#6d28d9] hover:from-[#6d28d9] hover:to-[#7c3aed] text-white font-extrabold text-sm sm:text-base tracking-wide flex items-center gap-3 shadow-[0_0_35px_rgba(139,92,246,0.6)] border border-purple-300/30 transition-all cursor-pointer group active:scale-95"
             >
-              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.25em] text-emerald-300/80 group-hover:text-emerald-300 transition-colors">
-                Scroll To Explore
+              <Play className="w-4 h-4 fill-white text-white shrink-0" />
+              <span>Explore Tactics</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform shrink-0" />
+            </motion.button>
+
+            {/* Instant Presets */}
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+              <span className="text-[11px] font-bold text-purple-300/70 uppercase tracking-wider mr-1">
+                Instant Formations:
               </span>
-              <motion.div
-                animate={{ y: [0, 8, 0], opacity: [0.6, 1, 0.6] }}
-                transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-                className="w-[2px] h-7 bg-gradient-to-b from-emerald-400 to-transparent rounded-full shadow-[0_0_8px_rgba(0,255,136,0.7)]"
-              />
-            </a>
+              {(['4-3-3', '4-2-3-1', '3-5-2', '4-4-2', '5-3-2'] as const).map((fmt) => (
+                <button
+                  key={fmt}
+                  type="button"
+                  onClick={() => onLaunchBoard(fmt)}
+                  className="px-3 py-1.5 rounded-lg bg-purple-950/70 hover:bg-purple-900 border border-purple-500/30 hover:border-purple-400 text-purple-200 hover:text-white text-xs font-bold transition active:scale-95 cursor-pointer shadow-sm"
+                >
+                  {fmt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ===================================================================== */}
+          {/* 5. 4 FEATURE CARDS (4-COLUMN GRID) */}
+          {/* ===================================================================== */}
+          <div className="w-full max-w-5xl mx-auto pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+              {/* Card 1: Pro Tactics */}
+              <div
+                onClick={() => onLaunchBoard('4-3-3')}
+                className="rounded-2xl p-4 bg-[#140b2e]/90 hover:bg-[#1f1045] border border-purple-800/40 hover:border-purple-500/70 backdrop-blur-md transition-all duration-200 cursor-pointer group flex items-center gap-3.5 shadow-lg shadow-purple-950/50"
+              >
+                <div className="w-11 h-11 rounded-xl bg-purple-950/90 border border-purple-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-inner">
+                  <Trophy className="w-5 h-5 text-[#c084fc]" />
+                </div>
+                <div>
+                  <h4 className="text-white font-extrabold text-sm sm:text-base leading-snug">Pro Tactics</h4>
+                  <p className="text-purple-300/75 text-xs font-medium">Learn winning strategies</p>
+                </div>
+              </div>
+
+              {/* Card 2: Improve Skills */}
+              <div
+                onClick={() => onLaunchBoard('4-4-2')}
+                className="rounded-2xl p-4 bg-[#140b2e]/90 hover:bg-[#1f1045] border border-purple-800/40 hover:border-purple-500/70 backdrop-blur-md transition-all duration-200 cursor-pointer group flex items-center gap-3.5 shadow-lg shadow-purple-950/50"
+              >
+                <div className="w-11 h-11 rounded-xl bg-purple-950/90 border border-purple-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-inner">
+                  <TrendingUp className="w-5 h-5 text-[#c084fc]" />
+                </div>
+                <div>
+                  <h4 className="text-white font-extrabold text-sm sm:text-base leading-snug">Improve Skills</h4>
+                  <p className="text-purple-300/75 text-xs font-medium">Boost your coaching</p>
+                </div>
+              </div>
+
+              {/* Card 3: Build Better Teams */}
+              <div
+                onClick={() => onLaunchBoard('3-5-2')}
+                className="rounded-2xl p-4 bg-[#140b2e]/90 hover:bg-[#1f1045] border border-purple-800/40 hover:border-purple-500/70 backdrop-blur-md transition-all duration-200 cursor-pointer group flex items-center gap-3.5 shadow-lg shadow-purple-950/50"
+              >
+                <div className="w-11 h-11 rounded-xl bg-purple-950/90 border border-purple-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-inner">
+                  <Users className="w-5 h-5 text-[#c084fc]" />
+                </div>
+                <div>
+                  <h4 className="text-white font-extrabold text-sm sm:text-base leading-snug">Build Better Teams</h4>
+                  <p className="text-purple-300/75 text-xs font-medium">Work smarter, not harder</p>
+                </div>
+              </div>
+
+              {/* Card 4: Stay Ahead */}
+              <div
+                onClick={() => onLaunchBoard('4-2-3-1')}
+                className="rounded-2xl p-4 bg-[#140b2e]/90 hover:bg-[#1f1045] border border-purple-800/40 hover:border-purple-500/70 backdrop-blur-md transition-all duration-200 cursor-pointer group flex items-center gap-3.5 shadow-lg shadow-purple-950/50"
+              >
+                <div className="w-11 h-11 rounded-xl bg-purple-950/90 border border-purple-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-inner">
+                  <Zap className="w-5 h-5 text-[#c084fc]" />
+                </div>
+                <div>
+                  <h4 className="text-white font-extrabold text-sm sm:text-base leading-snug">Stay Ahead</h4>
+                  <p className="text-purple-300/75 text-xs font-medium">Be ready for every match</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ===================================================================== */}
+          {/* 6. SPONSORED BANNER (CENTERED AT BOTTOM OF HERO SECTION) */}
+          {/* ===================================================================== */}
+          <div className="w-full max-w-5xl mx-auto pt-3 pb-2">
+            <div className="rounded-xl overflow-hidden border border-purple-500/20 bg-black/60 p-1.5 shadow-lg flex items-center justify-center">
+              <div className="w-full min-h-[60px] sm:min-h-[70px] rounded-lg bg-gradient-to-r from-[#140c26] via-[#21113d] to-[#140c26] border border-purple-500/30 flex items-center justify-between px-4 sm:px-6 py-2 text-white">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="text-xl sm:text-2xl font-black italic tracking-tighter text-amber-400">
+                    amazon
+                  </div>
+                  <div className="text-left">
+                    <div className="font-extrabold text-xs sm:text-sm text-white">Better Deals. Bigger Smiles.</div>
+                    <div className="text-[10px] sm:text-xs text-purple-300/70">Shop verified tactical gear, magnetic boards &amp; kit designers</div>
+                  </div>
+                </div>
+                <a
+                  href="https://www.amazon.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 sm:px-6 py-2 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-md transition active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  Shop now
+                </a>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -744,410 +646,481 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* ========================================================================= */}
       {/* STATS & CREDIBILITY BAR */}
       {/* ========================================================================= */}
-      <section className={`border-y py-6 sm:py-12 px-3.5 sm:px-6 lg:px-8 relative overflow-hidden transition-colors ${
+      <section className={`border-y py-6 sm:py-10 px-4 sm:px-6 lg:px-8 relative overflow-hidden transition-colors ${
         isLight
-          ? 'bg-slate-100/60 border-slate-200 text-slate-900'
-          : 'bg-black border-neutral-800 text-white'
+          ? 'bg-slate-100/70 border-slate-200 text-slate-900'
+          : 'bg-[#0a0518] border-purple-950 text-white'
       }`}>
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-6 text-center">
-          <div className={`p-3.5 sm:p-5 rounded-2xl border space-y-1 shadow-sm ${
-            isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 text-center">
+          <div className={`p-4 rounded-2xl border space-y-1 shadow-sm ${
+            isLight ? 'bg-white border-slate-200' : 'bg-purple-950/40 border-purple-800/40'
           }`}>
-            <div className={`text-2xl sm:text-4xl font-luxury font-black tracking-tight ${isLight ? 'text-slate-950' : 'text-white'}`}>50+</div>
-            <p className="text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-display font-semibold tracking-wider uppercase">Formations</p>
+            <div className={`text-2xl sm:text-4xl font-black tracking-tight ${isLight ? 'text-slate-950' : 'text-white'}`}>50+</div>
+            <p className="text-[11px] sm:text-xs text-purple-600 dark:text-purple-400 font-semibold tracking-wider uppercase">Tactical Formations</p>
           </div>
-          <div className={`p-3.5 sm:p-5 rounded-2xl border space-y-1 shadow-sm ${
-            isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
+          <div className={`p-4 rounded-2xl border space-y-1 shadow-sm ${
+            isLight ? 'bg-white border-slate-200' : 'bg-purple-950/40 border-purple-800/40'
           }`}>
-            <div className="text-2xl sm:text-4xl font-luxury font-black text-amber-500 dark:text-amber-300 tracking-tight">11</div>
-            <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 font-display font-semibold tracking-wider uppercase">Turf Styles</p>
+            <div className="text-2xl sm:text-4xl font-black text-amber-500 dark:text-amber-300 tracking-tight">11</div>
+            <p className="text-[11px] sm:text-xs text-amber-600 dark:text-amber-400 font-semibold tracking-wider uppercase">Turf Styles &amp; Lights</p>
           </div>
-          <div className={`p-3.5 sm:p-5 rounded-2xl border space-y-1 shadow-sm ${
-            isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
+          <div className={`p-4 rounded-2xl border space-y-1 shadow-sm ${
+            isLight ? 'bg-white border-slate-200' : 'bg-purple-950/40 border-purple-800/40'
           }`}>
-            <div className="text-2xl sm:text-4xl font-luxury font-black text-emerald-600 dark:text-emerald-400 tracking-tight">11v11</div>
-            <p className="text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-display font-semibold tracking-wider uppercase">Match Clash</p>
+            <div className="text-2xl sm:text-4xl font-black text-purple-600 dark:text-purple-400 tracking-tight">11v11</div>
+            <p className="text-[11px] sm:text-xs text-purple-600 dark:text-purple-400 font-semibold tracking-wider uppercase">Match Clash Mode</p>
           </div>
-          <div className={`p-3.5 sm:p-5 rounded-2xl border space-y-1 shadow-sm ${
-            isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
+          <div className={`p-4 rounded-2xl border space-y-1 shadow-sm ${
+            isLight ? 'bg-white border-slate-200' : 'bg-purple-950/40 border-purple-800/40'
           }`}>
-            <div className="text-2xl sm:text-4xl font-luxury font-black text-teal-600 dark:text-teal-300 tracking-tight">100%</div>
-            <p className="text-[10px] sm:text-xs text-teal-600 dark:text-teal-400 font-display font-semibold tracking-wider uppercase">Speed &amp; Privacy</p>
+            <div className="text-2xl sm:text-4xl font-black text-teal-600 dark:text-teal-300 tracking-tight">100%</div>
+            <p className="text-[11px] sm:text-xs text-teal-600 dark:text-teal-400 font-semibold tracking-wider uppercase">Free &amp; In-Browser</p>
           </div>
         </div>
       </section>
 
       {/* ========================================================================= */}
-      {/* FEATURE BENTO GRID (Deep presentation of website & board) */}
+      {/* INTERACTIVE FORMATION SANDBOX (PITCH & PLAYER DRILLS) */}
       {/* ========================================================================= */}
-      <section id="features" className="py-12 sm:py-24 lg:py-32 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10 sm:space-y-16">
-        
-        {/* Section Heading */}
-        <div className="text-center max-w-3xl mx-auto space-y-2.5 sm:space-y-4">
-          <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-display font-bold tracking-[0.15em] uppercase border ${
+      <section id="sandbox" className={`py-12 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10 sm:space-y-14 transition-colors ${
+        isLight ? 'text-slate-900' : 'text-white'
+      }`}>
+        <div className="text-center max-w-3xl mx-auto space-y-3">
+          <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase border ${
             isLight
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 shadow-sm'
-              : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+              ? 'bg-purple-500/10 border-purple-500/30 text-purple-700'
+              : 'bg-purple-500/15 border-purple-500/30 text-purple-300'
+          }`}>
+            <SvgDiamondBadge className="w-3.5 h-3.5" />
+            <span>Interactive Tactics Sandbox</span>
+          </div>
+          <h2 className={`text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight ${
+            isLight ? 'text-slate-950' : 'text-white'
+          }`}>
+            Experience Tactical Mechanics in Real-Time
+          </h2>
+          <p className={`text-xs sm:text-sm lg:text-base leading-relaxed max-w-xl mx-auto ${
+            isLight ? 'text-slate-700' : 'text-neutral-300'
+          }`}>
+            Test formation geometry, toggle pressing phases, and view individual player instructions right on the pitch.
+          </p>
+        </div>
+
+        {/* Sandbox Grid: Pitch on Left, Controls & Player Card on Right */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          
+          {/* Pitch Container */}
+          <div className="lg:col-span-7 xl:col-span-8 flex flex-col space-y-3">
+            {/* Top Toolbar */}
+            <div className={`p-3 rounded-2xl border flex flex-wrap items-center justify-between gap-2 text-xs ${
+              isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
+            }`}>
+              {/* Formation Selector Tabs */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                {(['4-3-3', '4-2-3-1', '3-5-2', '4-4-2', '5-3-2'] as const).map((fmt) => (
+                  <button
+                    key={fmt}
+                    type="button"
+                    onClick={() => setSelectedFormationKey(fmt)}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition active:scale-95 cursor-pointer whitespace-nowrap ${
+                      selectedFormationKey === fmt
+                        ? 'bg-purple-600 text-white shadow-md'
+                        : isLight
+                        ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+                    }`}
+                  >
+                    {fmt}
+                  </button>
+                ))}
+              </div>
+
+              {/* Tactical Phase Selector */}
+              <div className="flex items-center gap-1">
+                {(['balanced', 'attack', 'defense'] as const).map((ph) => (
+                  <button
+                    key={ph}
+                    type="button"
+                    onClick={() => setTacticalPhase(ph)}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold capitalize transition active:scale-95 cursor-pointer ${
+                      tacticalPhase === ph
+                        ? 'bg-amber-400 text-slate-950 shadow-sm'
+                        : isLight
+                        ? 'text-slate-600 hover:text-slate-900'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    {ph}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Pitch Board */}
+            <div className="relative w-full aspect-[4/3] sm:aspect-[16/11] rounded-2xl sm:rounded-3xl overflow-hidden border border-purple-500/30 bg-[#0f2e1b] shadow-xl">
+              {/* Pitch Grass Stripes */}
+              <div className="absolute inset-0 flex flex-col">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`flex-1 ${i % 2 === 0 ? 'bg-white/[0.04]' : 'bg-transparent'}`}
+                  />
+                ))}
+              </div>
+
+              {/* Pitch Markings */}
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+              >
+                <rect x="4" y="4" width="92" height="92" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+                <line x1="4" y1="50" x2="96" y2="50" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+                <circle cx="50" cy="50" r="12" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+                <circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.8)" />
+                <rect x="25" y="4" width="50" height="16" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+                <rect x="36" y="4" width="28" height="6" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+                <rect x="25" y="80" width="50" height="16" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+                <rect x="36" y="90" width="28" height="6" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+              </svg>
+
+              {/* Players Tokens */}
+              {heroPositions.map((player) => {
+                const { x, y } = getShiftedPosition(player, tacticalPhase);
+                const isSelected = selectedPlayerId === player.id;
+                return (
+                  <motion.button
+                    key={player.id}
+                    type="button"
+                    onClick={() => setSelectedPlayerId(player.id)}
+                    animate={{ left: `${x}%`, top: `${y}%` }}
+                    transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center group cursor-pointer focus:outline-none"
+                  >
+                    <div
+                      className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center font-black text-[9px] sm:text-[10px] shadow-lg transition-transform duration-200 group-hover:scale-125 ${
+                        isSelected
+                          ? 'bg-amber-400 text-slate-950 ring-2 ring-white scale-110'
+                          : 'bg-purple-500 text-white ring-1 ring-purple-950/40'
+                      }`}
+                    >
+                      {player.label}
+                    </div>
+                    <span
+                      className={`text-[8px] sm:text-[9px] font-bold px-1 rounded mt-0.5 whitespace-nowrap shadow-sm pointer-events-none ${
+                        isSelected ? 'bg-amber-400 text-slate-950 font-black' : 'bg-black/80 text-white'
+                      }`}
+                    >
+                      {player.name}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right Card: Selected Player Tactical Profile */}
+          <div className="lg:col-span-5 xl:col-span-4 space-y-4">
+            <div className={`p-6 rounded-3xl border shadow-md space-y-4 ${
+              isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
+            }`}>
+              <div className="flex items-center justify-between pb-3 border-b border-purple-500/20">
+                <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">
+                  Tactical Role Profile
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  {activePlayer.role}
+                </span>
+              </div>
+
+              <div>
+                <h3 className={`text-xl font-black ${isLight ? 'text-slate-950' : 'text-white'}`}>
+                  {activePlayer.name}
+                </h3>
+                <p className="text-xs text-purple-400 font-semibold">Jersey #{activePlayer.label}</p>
+              </div>
+
+              <div className={`p-3.5 rounded-xl border text-xs leading-relaxed ${
+                isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-neutral-800/60 border-neutral-700 text-neutral-300'
+              }`}>
+                <p className="font-semibold text-purple-400 mb-1">Assigned Instruction:</p>
+                {activePlayer.instruction}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onLaunchBoard(selectedFormationKey)}
+                className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Edit Squad in Full Studio</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* FEATURE BENTO GRID */}
+      {/* ========================================================================= */}
+      <section id="features" className={`py-12 sm:py-24 border-t px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10 sm:space-y-16 transition-colors ${
+        isLight ? 'border-slate-200' : 'border-neutral-800'
+      }`}>
+        <div className="text-center max-w-3xl mx-auto space-y-3">
+          <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase border ${
+            isLight
+              ? 'bg-purple-500/10 border-purple-500/30 text-purple-700'
+              : 'bg-purple-500/15 border-purple-500/30 text-purple-300'
           }`}>
             <SvgDiamondBadge className="w-3.5 h-3.5" />
             <span>Complete Tactical Arsenal</span>
           </div>
-          <h2 className={`text-2xl sm:text-4xl lg:text-5xl font-luxury font-black tracking-tight ${
+          <h2 className={`text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight ${
             isLight ? 'text-slate-950' : 'text-white'
           }`}>
             Engineered for Modern Football Minds
           </h2>
-          <p className={`text-xs sm:text-sm lg:text-base font-sans leading-relaxed max-w-xl mx-auto ${
+          <p className={`text-xs sm:text-sm lg:text-base leading-relaxed max-w-xl mx-auto ${
             isLight ? 'text-slate-700' : 'text-neutral-300'
           }`}>
             Every tool you need to analyze opponent patterns, communicate match strategies with players, and export publication-ready visuals.
           </p>
         </div>
 
-        {/* Bento Grid with Custom Luxury SVGs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
+        {/* Bento Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           
-          {/* Card 1: 11v11 Match Simulation */}
-          <div className={`p-5 sm:p-7 rounded-3xl border transition-all space-y-3.5 sm:space-y-4 group shadow-sm ${
+          {/* Card 1: 11v11 Simulation */}
+          <div className={`p-6 rounded-3xl border transition-all space-y-4 group shadow-sm ${
             isLight
-              ? 'bg-white border-slate-200 hover:border-emerald-500/50 hover:shadow-md'
-              : 'bg-neutral-900 border-neutral-800 hover:border-emerald-500/50 hover:bg-neutral-850'
+              ? 'bg-white border-slate-200 hover:border-purple-500/50 hover:shadow-md'
+              : 'bg-neutral-900 border-neutral-800 hover:border-purple-500/50'
           }`}>
-            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border flex items-center justify-center group-hover:scale-110 transition-transform ${
-              isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-emerald-500/10 border-emerald-400/30 text-emerald-500'
-            }`}>
-              <SvgMatchClash className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <SvgMatchClash className="w-6 h-6" />
             </div>
-            <h3 className={`text-base sm:text-lg font-display font-bold tracking-tight ${isLight ? 'text-slate-950' : 'text-white'}`}>
+            <h3 className={`text-lg font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
               True 11v11 &amp; Single Team Modes
             </h3>
-            <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
+            <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
               Switch effortlessly between single squad drill planning and full 11 vs 11 pitch clashes. Drag players to map pressing traps, overloads, and defensive cover shadows in real time.
             </p>
           </div>
 
-          {/* Card 2: Realistic Pitch Textures */}
-          <div id="pitch-styles" className={`p-5 sm:p-7 rounded-3xl border transition-all space-y-3.5 sm:space-y-4 group shadow-sm ${
+          {/* Card 2: 11 Turf Styles */}
+          <div className={`p-6 rounded-3xl border transition-all space-y-4 group shadow-sm ${
             isLight
-              ? 'bg-white border-slate-200 hover:border-teal-500/50 hover:shadow-md'
-              : 'bg-neutral-900 border-neutral-800 hover:border-teal-500/50 hover:bg-neutral-850'
+              ? 'bg-white border-slate-200 hover:border-purple-500/50 hover:shadow-md'
+              : 'bg-neutral-900 border-neutral-800 hover:border-purple-500/50'
           }`}>
-            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border flex items-center justify-center group-hover:scale-110 transition-transform ${
-              isLight ? 'bg-teal-50 border-teal-200 text-teal-600' : 'bg-teal-500/10 border-teal-400/30 text-teal-500'
-            }`}>
-              <SvgTurfStadium className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-teal-500/15 border border-teal-500/30 text-teal-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <SvgTurfStadium className="w-6 h-6" />
             </div>
-            <h3 className={`text-base sm:text-lg font-display font-bold tracking-tight ${isLight ? 'text-slate-950' : 'text-white'}`}>
+            <h3 className={`text-lg font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
               11 Stadium Turf Textures
             </h3>
-            <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
+            <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
               From Premier League lawn stripes, concentric mower rings, diamond cut turf to 4G synthetic turf and winter frost with daylight, sunset, and floodlight stadium modes.
             </p>
           </div>
 
           {/* Card 3: Keyframe Studio */}
-          <div id="keyframes" className={`p-5 sm:p-7 rounded-3xl border transition-all space-y-3.5 sm:space-y-4 group shadow-sm ${
+          <div id="keyframes" className={`p-6 rounded-3xl border transition-all space-y-4 group shadow-sm ${
             isLight
-              ? 'bg-white border-slate-200 hover:border-emerald-500/50 hover:shadow-md'
-              : 'bg-neutral-900 border-neutral-800 hover:border-emerald-500/50 hover:bg-neutral-850'
+              ? 'bg-white border-slate-200 hover:border-purple-500/50 hover:shadow-md'
+              : 'bg-neutral-900 border-neutral-800 hover:border-purple-500/50'
           }`}>
-            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border flex items-center justify-center group-hover:scale-110 transition-transform ${
-              isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-emerald-500/10 border-emerald-400/30 text-emerald-500'
-            }`}>
-              <SvgKeyframeFilm className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <SvgKeyframeFilm className="w-6 h-6" />
             </div>
-            <h3 className={`text-base sm:text-lg font-display font-bold tracking-tight ${isLight ? 'text-slate-950' : 'text-white'}`}>
+            <h3 className={`text-lg font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
               Keyframe Animation Studio
             </h3>
-            <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
+            <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
               Record player movements across Phase 1, Phase 2, and Phase 3. Play back corner routines, counter-attacks, and pressing schemes with smooth automated transitions.
             </p>
           </div>
 
-          {/* Card 4: Tactical Arrows & Heatmaps */}
-          <div className={`p-5 sm:p-7 rounded-3xl border transition-all space-y-3.5 sm:space-y-4 group shadow-sm ${
+          {/* Card 4: Tactical Arrows */}
+          <div className={`p-6 rounded-3xl border transition-all space-y-4 group shadow-sm ${
             isLight
-              ? 'bg-white border-slate-200 hover:border-amber-500/50 hover:shadow-md'
-              : 'bg-neutral-900 border-neutral-800 hover:border-amber-500/50 hover:bg-neutral-850'
+              ? 'bg-white border-slate-200 hover:border-purple-500/50 hover:shadow-md'
+              : 'bg-neutral-900 border-neutral-800 hover:border-purple-500/50'
           }`}>
-            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border flex items-center justify-center group-hover:scale-110 transition-transform ${
-              isLight ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-amber-500/10 border-amber-400/30 text-amber-500'
-            }`}>
-              <SvgDrawingTactics className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <SvgDrawingTactics className="w-6 h-6" />
             </div>
-            <h3 className={`text-base sm:text-lg font-display font-bold tracking-tight ${isLight ? 'text-slate-950' : 'text-white'}`}>
+            <h3 className={`text-lg font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
               Precision Tactical Drawing
             </h3>
-            <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
+            <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
               Sketch passing lanes, diagonal runs, dribbling zones, and pressing arrows with multiple line styles. Enable the live heatmap overlay to visualize pitch occupancy.
             </p>
           </div>
 
-          {/* Card 5: Kit & Strip Customizer */}
-          <div className={`p-5 sm:p-7 rounded-3xl border transition-all space-y-3.5 sm:space-y-4 group shadow-sm ${
+          {/* Card 5: Kit Customizer */}
+          <div className={`p-6 rounded-3xl border transition-all space-y-4 group shadow-sm ${
             isLight
-              ? 'bg-white border-slate-200 hover:border-blue-500/50 hover:shadow-md'
-              : 'bg-neutral-900 border-neutral-800 hover:border-blue-500/50 hover:bg-neutral-850'
+              ? 'bg-white border-slate-200 hover:border-purple-500/50 hover:shadow-md'
+              : 'bg-neutral-900 border-neutral-800 hover:border-purple-500/50'
           }`}>
-            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border flex items-center justify-center group-hover:scale-110 transition-transform ${
-              isLight ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-blue-500/10 border-blue-400/30 text-blue-500'
-            }`}>
-              <SvgJerseyKit className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <SvgJerseyKit className="w-6 h-6" />
             </div>
-            <h3 className={`text-base sm:text-lg font-display font-bold tracking-tight ${isLight ? 'text-slate-950' : 'text-white'}`}>
+            <h3 className={`text-lg font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
               Full Kit &amp; Jersey Customizer
             </h3>
-            <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
+            <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
               Tailor team strips with custom primary/secondary colors, vertical stripes, horizontal hoops, sashes, goalkeeper colors, custom squad numbers, and team crest badges.
             </p>
           </div>
 
-          {/* Card 6: 4K Export Studio */}
-          <div className={`p-5 sm:p-7 rounded-3xl border transition-all space-y-3.5 sm:space-y-4 group sm:col-span-2 lg:col-span-1 shadow-sm ${
+          {/* Card 6: 4K Export */}
+          <div className={`p-6 rounded-3xl border transition-all space-y-4 group sm:col-span-2 lg:col-span-1 shadow-sm ${
             isLight
-              ? 'bg-white border-slate-200 hover:border-emerald-500/50 hover:shadow-md'
-              : 'bg-neutral-900 border-neutral-800 hover:border-emerald-500/50 hover:bg-neutral-850'
+              ? 'bg-white border-slate-200 hover:border-purple-500/50 hover:shadow-md'
+              : 'bg-neutral-900 border-neutral-800 hover:border-purple-500/50'
           }`}>
-            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border flex items-center justify-center group-hover:scale-110 transition-transform ${
-              isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-emerald-500/10 border-emerald-400/30 text-emerald-500'
-            }`}>
-              <SvgExport4K className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <SvgExport4K className="w-6 h-6" />
             </div>
-            <h3 className={`text-base sm:text-lg font-display font-bold tracking-tight ${isLight ? 'text-slate-950' : 'text-white'}`}>
-              Instant HD / 4K Graphic Export
+            <h3 className={`text-lg font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
+              Instant HD Graphic Export
             </h3>
-            <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
+            <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
               Generate crisp PNG image files formatted for tactical books, coaching slideshows, Twitter/X breakdowns, and video editing overlays with one click.
             </p>
           </div>
 
         </div>
 
-        {/* Center Luxury Launch CTA inside features */}
-        <div className="text-center pt-2 sm:pt-6">
+        {/* Center Launch CTA */}
+        <div className="text-center pt-4">
           <button
+            type="button"
             onClick={() => onLaunchBoard()}
-            className="w-full sm:w-auto px-7 sm:px-9 py-3.5 sm:py-4 rounded-2xl font-display font-black text-sm transition-all inline-flex items-center justify-center gap-2.5 active:scale-95 relative overflow-hidden group cursor-pointer luxury-cta text-slate-950 border border-emerald-200/40 shadow-xl shadow-emerald-500/25"
+            className="w-full sm:w-auto px-9 py-4 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-sm tracking-wide shadow-xl shadow-purple-900/40 transition active:scale-95 inline-flex items-center justify-center gap-2.5 cursor-pointer"
           >
-            <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-luxury-shimmer pointer-events-none" />
-            <SvgLuxuryPlay className="w-4 h-4 text-slate-950" />
-            <span className="tracking-wide font-extrabold">Launch Tactical Studio</span>
-            <SvgLuxuryArrow className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <span>Launch Tactical Studio</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
-
       </section>
 
       {/* ========================================================================= */}
       {/* SQUAD PRESETS & FORMATIONS SHOWCASE */}
       {/* ========================================================================= */}
-      <section id="formations" className={`py-12 sm:py-24 border-y px-3.5 sm:px-6 lg:px-8 transition-colors ${
-        isLight ? 'bg-slate-50 border-slate-200' : 'bg-black border-neutral-800'
+      <section id="formations" className={`py-12 sm:py-24 border-t px-4 sm:px-6 lg:px-8 transition-colors ${
+        isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080414] border-neutral-800'
       }`}>
-        <div className="max-w-7xl mx-auto space-y-8 sm:space-y-14">
+        <div className="max-w-7xl mx-auto space-y-10 sm:space-y-14">
           
-          <div className="text-center max-w-2xl mx-auto space-y-2.5 sm:space-y-4">
-            <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-display font-bold tracking-[0.15em] uppercase border ${
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase border ${
               isLight
-                ? 'bg-teal-500/10 border-teal-500/30 text-teal-700 shadow-sm'
-                : 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-400'
+                ? 'bg-purple-500/10 border-purple-500/30 text-purple-700'
+                : 'bg-purple-500/15 border-purple-500/30 text-purple-300'
             }`}>
               <SvgDiamondBadge className="w-3.5 h-3.5" />
               <span>Instant Tactical Setups</span>
             </div>
-            <h2 className={`text-2xl sm:text-4xl lg:text-5xl font-luxury font-black tracking-tight ${
+            <h2 className={`text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight ${
               isLight ? 'text-slate-950' : 'text-white'
             }`}>
               Pre-Configured Tactical Archetypes
             </h2>
-            <p className={`text-xs sm:text-sm font-sans ${isLight ? 'text-slate-700' : 'text-neutral-300'}`}>
-              Pick a tactical archetype to load immediately into the interactive board with tailored tactical instructions:
+            <p className={`text-xs sm:text-sm ${isLight ? 'text-slate-700' : 'text-neutral-300'}`}>
+              Pick a tactical archetype to load immediately into the interactive board:
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             
             {/* Archetype 1 */}
-            <div className={`p-5 sm:p-7 rounded-3xl border transition-all flex flex-col justify-between space-y-5 sm:space-y-6 shadow-sm ${
-              isLight
-                ? 'bg-white border-slate-200 hover:border-emerald-500/50 hover:shadow-md'
-                : 'bg-neutral-900 border-neutral-800 hover:border-emerald-500/60'
+            <div className={`p-6 rounded-3xl border flex flex-col justify-between space-y-5 shadow-sm ${
+              isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
             }`}>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className={`px-3 py-1 rounded-lg font-luxury text-xs font-bold border ${
-                    isLight
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                  }`}>
+                  <span className="px-3 py-1 rounded-lg text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                     4-3-3 Holding
                   </span>
-                  <span className={`text-xs font-display font-bold tracking-wide uppercase ${isLight ? 'text-slate-500' : 'text-neutral-400'}`}>Possession Base</span>
+                  <span className="text-xs font-bold uppercase text-purple-400">Possession Base</span>
                 </div>
-                <h3 className={`text-base sm:text-lg font-luxury font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
+                <h3 className={`text-lg font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
                   Elite Positional Play (Juego de Posición)
                 </h3>
-                <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
+                <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
                   Single pivot CDM shielding central defense with high-positioned wingers creating 1v1 overloads and interior #8s exploiting half-spaces.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => onLaunchBoard('4-3-3 Holding')}
-                className={`w-full py-3 rounded-xl active:scale-[0.98] font-display font-bold text-xs transition-all flex items-center justify-center gap-2 border cursor-pointer ${
-                  isLight
-                    ? 'bg-slate-100 hover:bg-emerald-500 hover:text-slate-950 text-slate-800 border-slate-200 hover:border-emerald-400 font-extrabold shadow-sm'
-                    : 'bg-neutral-800 hover:bg-emerald-500 hover:text-slate-950 text-white border-neutral-700 hover:border-emerald-400'
-                }`}
+                className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
                 <span>Launch this Formation</span>
-                <SvgLuxuryArrow className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Archetype 2 */}
-            <div className={`p-5 sm:p-7 rounded-3xl border transition-all flex flex-col justify-between space-y-5 sm:space-y-6 shadow-sm ${
-              isLight
-                ? 'bg-white border-slate-200 hover:border-teal-500/50 hover:shadow-md'
-                : 'bg-neutral-900 border-neutral-800 hover:border-teal-500/60'
+            <div className={`p-6 rounded-3xl border flex flex-col justify-between space-y-5 shadow-sm ${
+              isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
             }`}>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className={`px-3 py-1 rounded-lg font-luxury text-xs font-bold border ${
-                    isLight
-                      ? 'bg-teal-50 text-teal-800 border-teal-200'
-                      : 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/30'
-                  }`}>
+                  <span className="px-3 py-1 rounded-lg text-xs font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
                     4-2-3-1 Modern
                   </span>
-                  <span className={`text-xs font-display font-bold tracking-wide uppercase ${isLight ? 'text-slate-500' : 'text-neutral-400'}`}>High Press &amp; Transition</span>
+                  <span className="text-xs font-bold uppercase text-teal-400">High Press &amp; Transition</span>
                 </div>
-                <h3 className={`text-base sm:text-lg font-luxury font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
+                <h3 className={`text-lg font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
                   Double Pivot Heavy Metal Press
                 </h3>
-                <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
+                <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
                   Stifling midfield control with dual defensive pivots, a creative central #10 creating killer through-balls, and rapid counter-pressing triggers.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => onLaunchBoard('4-2-3-1 Modern')}
-                className={`w-full py-3 rounded-xl active:scale-[0.98] font-display font-bold text-xs transition-all flex items-center justify-center gap-2 border cursor-pointer ${
-                  isLight
-                    ? 'bg-slate-100 hover:bg-teal-400 hover:text-slate-950 text-slate-800 border-slate-200 hover:border-teal-400 font-extrabold shadow-sm'
-                    : 'bg-neutral-800 hover:bg-teal-400 hover:text-slate-950 text-white border-neutral-700 hover:border-teal-400'
-                }`}
+                className="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
                 <span>Launch this Formation</span>
-                <SvgLuxuryArrow className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Archetype 3 */}
-            <div className={`p-5 sm:p-7 rounded-3xl border transition-all flex flex-col justify-between space-y-5 sm:space-y-6 sm:col-span-2 lg:col-span-1 shadow-sm ${
-              isLight
-                ? 'bg-white border-slate-200 hover:border-amber-500/50 hover:shadow-md'
-                : 'bg-neutral-900 border-neutral-800 hover:border-amber-500/60'
+            <div className={`p-6 rounded-3xl border flex flex-col justify-between space-y-5 sm:col-span-2 lg:col-span-1 shadow-sm ${
+              isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
             }`}>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className={`px-3 py-1 rounded-lg font-luxury text-xs font-bold border ${
-                    isLight
-                      ? 'bg-amber-50 text-amber-800 border-amber-200'
-                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                  }`}>
+                  <span className="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     3-5-2 Wing-Back
                   </span>
-                  <span className={`text-xs font-display font-bold tracking-wide uppercase ${isLight ? 'text-slate-500' : 'text-neutral-400'}`}>Fluid Overload</span>
+                  <span className="text-xs font-bold uppercase text-amber-400">Fluid Overload</span>
                 </div>
-                <h3 className={`text-base sm:text-lg font-luxury font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
+                <h3 className={`text-lg font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
                   3-Back Dynamic Width &amp; 2 Strikers
                 </h3>
-                <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
+                <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
                   Solid 3-center-back defensive foundation with marathon wing-backs supplying crosses to dual attacking target strikers.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => onLaunchBoard('3-5-2 Wing-Back')}
-                className={`w-full py-3 rounded-xl active:scale-[0.98] font-display font-bold text-xs transition-all flex items-center justify-center gap-2 border cursor-pointer ${
-                  isLight
-                    ? 'bg-slate-100 hover:bg-amber-400 hover:text-slate-950 text-slate-800 border-slate-200 hover:border-amber-400 font-extrabold shadow-sm'
-                    : 'bg-neutral-800 hover:bg-amber-400 hover:text-slate-950 text-white border-neutral-700 hover:border-amber-400'
-                }`}
+                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
                 <span>Launch this Formation</span>
-                <SvgLuxuryArrow className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-          </div>
-
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 3 STEP HOW IT WORKS */}
-      {/* ========================================================================= */}
-      <section className="py-12 sm:py-24 lg:py-32 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10 sm:space-y-16">
-        <div className="text-center max-w-2xl mx-auto space-y-2.5 sm:space-y-4">
-          <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-display font-bold tracking-[0.15em] uppercase border ${
-            isLight
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 shadow-sm'
-              : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-          }`}>
-            <SvgDiamondBadge className="w-3.5 h-3.5" />
-            <span>Tactical Workflow</span>
-          </div>
-          <h2 className={`text-2xl sm:text-4xl lg:text-5xl font-luxury font-black tracking-tight ${
-            isLight ? 'text-slate-950' : 'text-white'
-          }`}>
-            From Match Plan to Pitch Execution in 3 Steps
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-6 lg:gap-8">
-          
-          {/* Step 1 */}
-          <div className={`p-5 sm:p-7 rounded-3xl border relative space-y-3.5 sm:space-y-4 shadow-sm ${
-            isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
-          }`}>
-            <div className="w-10 h-10 rounded-2xl font-luxury font-black text-base flex items-center justify-center shadow-md bg-emerald-500 text-slate-950 shadow-emerald-500/30">
-              I
-            </div>
-            <h3 className={`text-base sm:text-lg font-display font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
-              Configure Squad &amp; Formation
-            </h3>
-            <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
-              Select preset squads or customize your own starting XI. Assign player roles, jersey numbers, captaincy, and choose your favorite pitch turf texture.
-            </p>
-          </div>
-
-          {/* Step 2 */}
-          <div className={`p-5 sm:p-7 rounded-3xl border relative space-y-3.5 sm:space-y-4 shadow-sm ${
-            isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
-          }`}>
-            <div className="w-10 h-10 rounded-2xl font-luxury font-black text-base flex items-center justify-center shadow-md bg-teal-400 text-slate-950 shadow-teal-500/30">
-              II
-            </div>
-            <h3 className={`text-base sm:text-lg font-display font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
-              Plot Strategies &amp; Keyframe Movement
-            </h3>
-            <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
-              Drag player tokens on the pitch, draw tactical arrows for runs and passes, and capture keyframe snapshots to animate set-piece execution.
-            </p>
-          </div>
-
-          {/* Step 3 */}
-          <div className={`p-5 sm:p-7 rounded-3xl border relative space-y-3.5 sm:space-y-4 shadow-sm ${
-            isLight ? 'bg-white border-slate-200' : 'bg-neutral-900 border-neutral-800'
-          }`}>
-            <div className="w-10 h-10 rounded-2xl font-luxury font-black text-base flex items-center justify-center shadow-md bg-amber-400 text-slate-950 shadow-amber-400/30">
-              III
-            </div>
-            <h3 className={`text-base sm:text-lg font-display font-bold ${isLight ? 'text-slate-950' : 'text-white'}`}>
-              Export &amp; Share Match Gameplan
-            </h3>
-            <p className={`text-xs leading-relaxed font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
-              Export ultra-sharp PNG tactical cards ready for team briefings, social channels, coaching sessions, or video breakdown analysis.
-            </p>
           </div>
 
         </div>
@@ -1156,26 +1129,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* ========================================================================= */}
       {/* FAQ SECTION */}
       {/* ========================================================================= */}
-      <section id="faq" className={`py-12 sm:py-24 border-y px-3.5 sm:px-6 lg:px-8 transition-colors ${
+      <section id="faq" className={`py-12 sm:py-24 border-t px-4 sm:px-6 lg:px-8 transition-colors ${
         isLight ? 'bg-slate-50 border-slate-200' : 'bg-black border-neutral-800'
       }`}>
         <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
           
-          <div className="text-center space-y-2.5 sm:space-y-4">
-            <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-display font-bold tracking-[0.15em] uppercase border ${
+          <div className="text-center space-y-3">
+            <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase border ${
               isLight
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 shadow-sm'
-                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                ? 'bg-purple-500/10 border-purple-500/30 text-purple-700'
+                : 'bg-purple-500/15 border-purple-500/30 text-purple-300'
             }`}>
               <SvgCrownStar className="w-3.5 h-3.5 text-amber-500" />
               <span>Frequently Asked Questions</span>
             </div>
-            <h2 className={`text-2xl sm:text-4xl font-luxury font-black tracking-tight ${isLight ? 'text-slate-950' : 'text-white'}`}>
+            <h2 className={`text-2xl sm:text-4xl font-black tracking-tight ${isLight ? 'text-slate-950' : 'text-white'}`}>
               Tactical Board Knowledge Base
             </h2>
           </div>
 
-          <div className="space-y-2.5 sm:space-y-4">
+          <div className="space-y-3">
             {FAQ_ITEMS.map((item, index) => {
               const isOpen = openFaqIndex === index;
               return (
@@ -1186,16 +1159,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   }`}
                 >
                   <button
+                    type="button"
                     onClick={() => setOpenFaqIndex(isOpen ? null : index)}
-                    className={`w-full px-4 sm:px-7 py-3.5 sm:py-5 text-left flex items-center justify-between gap-4 font-display font-bold text-xs sm:text-sm transition cursor-pointer active:scale-[0.99] ${
-                      isLight ? 'text-slate-900 hover:text-emerald-700' : 'text-white hover:text-emerald-400'
+                    className={`w-full px-5 sm:px-7 py-4 sm:py-5 text-left flex items-center justify-between gap-4 font-bold text-xs sm:text-sm transition cursor-pointer active:scale-[0.99] ${
+                      isLight ? 'text-slate-900 hover:text-purple-700' : 'text-white hover:text-purple-300'
                     }`}
                   >
                     <span>{item.question}</span>
                     <ChevronDown
                       className={`w-4 h-4 shrink-0 transition-transform duration-300 ${
                         isOpen
-                          ? isLight ? 'rotate-180 text-emerald-600' : 'rotate-180 text-emerald-500'
+                          ? 'rotate-180 text-purple-400'
                           : isLight
                           ? 'text-slate-400'
                           : 'text-neutral-500'
@@ -1209,8 +1183,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className={`px-4 sm:px-7 pb-4 sm:pb-6 text-xs leading-relaxed font-sans border-t pt-3.5 ${
+                        transition={{ duration: 0.25 }}
+                        className={`px-5 sm:px-7 pb-5 text-xs leading-relaxed border-t pt-3.5 ${
                           isLight
                             ? 'border-slate-100 text-slate-700'
                             : 'border-neutral-800 text-neutral-300'
@@ -1229,119 +1203,107 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* ========================================================================= */}
-      {/* COMPREHENSIVE PROFESSIONAL FOOTER */}
+      {/* COMPREHENSIVE FOOTER */}
       {/* ========================================================================= */}
       <footer className={`mt-auto border-t text-xs py-10 sm:py-16 px-4 sm:px-6 lg:px-8 transition-colors ${
         isLight
           ? 'border-slate-200 bg-white text-slate-700'
-          : 'border-neutral-800 bg-black text-neutral-400'
+          : 'border-neutral-800 bg-[#060310] text-neutral-400'
       }`}>
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-7 sm:gap-10">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
           
-          {/* Column 1: Brand & Bio */}
-          <div className="sm:col-span-2 md:col-span-3 lg:col-span-2 space-y-3 sm:space-y-4">
+          {/* Column 1: Brand */}
+          <div className="sm:col-span-2 md:col-span-3 lg:col-span-2 space-y-3.5">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 flex items-center justify-center shrink-0">
-                <SvgBeCoachLogo className="w-full h-full drop-shadow-md rounded-lg" />
+              <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                <SvgBeCoachCrown className="w-full h-full drop-shadow-md" />
               </div>
-              <span className={`font-luxury font-bold text-base tracking-[0.14em] uppercase ${isLight ? 'text-slate-950' : 'text-white'}`}>
-                <span className="text-emerald-500 font-extrabold italic mr-0.5">BE</span> COACH
+              <span className={`font-black text-lg tracking-tight ${isLight ? 'text-slate-950' : 'text-white'}`}>
+                Be&nbsp;<span className="text-purple-400">Coach</span>
               </span>
             </div>
-            <p className={`text-xs leading-relaxed max-w-sm font-sans ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
+            <p className={`text-xs leading-relaxed max-w-sm ${isLight ? 'text-slate-600' : 'text-neutral-400'}`}>
               The premier web-based football tactics board and squad manager for coaches, tactical analysts, content creators, and football enthusiasts worldwide.
             </p>
-            <div className="flex items-center gap-3 pt-1 text-[11px] font-display text-neutral-500">
-              <span className={`inline-flex items-center gap-1.5 font-semibold ${isLight ? 'text-emerald-700' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                <span className="w-2 h-2 rounded-full animate-pulse bg-emerald-500" />
-                Live Client Engine
-              </span>
-              <span>•</span>
-              <span>2026 Season Edition</span>
+            <div className="flex items-center gap-3 pt-1 text-[11px] text-purple-400 font-semibold">
+              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+              <span>3D Tactical Engine • 2026 Edition</span>
             </div>
           </div>
 
-          {/* Column 2: Tactical Studio Features */}
-          <div className="space-y-3 font-display">
-            <h4 className={`font-bold text-xs uppercase tracking-wider ${isLight ? 'text-slate-950 font-black' : 'text-white'}`}>Tactical Features</h4>
+          {/* Column 2: Studio Features */}
+          <div className="space-y-3">
+            <h4 className={`font-bold text-xs uppercase tracking-wider ${isLight ? 'text-slate-950' : 'text-white'}`}>Features</h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <button onClick={() => onLaunchBoard()} className={`transition text-left active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
+                <button type="button" onClick={() => onLaunchBoard()} className="hover:text-purple-400 transition text-left cursor-pointer">
                   11v11 Matchup Board
                 </button>
               </li>
               <li>
-                <button onClick={() => onLaunchBoard()} className={`transition text-left active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
-                  Turf &amp; Stadium Lighting
+                <button type="button" onClick={() => onLaunchBoard()} className="hover:text-purple-400 transition text-left cursor-pointer">
+                  Turf &amp; Lighting Styles
                 </button>
               </li>
               <li>
-                <button onClick={() => onLaunchBoard()} className={`transition text-left active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
+                <button type="button" onClick={() => onLaunchBoard()} className="hover:text-purple-400 transition text-left cursor-pointer">
                   Tactical Arrows &amp; Heatmaps
                 </button>
               </li>
               <li>
-                <button onClick={() => onLaunchBoard()} className={`transition text-left active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
+                <button type="button" onClick={() => onLaunchBoard()} className="hover:text-purple-400 transition text-left cursor-pointer">
                   Keyframe Animation Studio
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onLaunchBoard()} className={`transition text-left active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
-                  Jersey &amp; Kit Customizer
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Column 3: Formations & Setups */}
-          <div className="space-y-3 font-display">
-            <h4 className={`font-bold text-xs uppercase tracking-wider ${isLight ? 'text-slate-950 font-black' : 'text-white'}`}>Formations</h4>
+          {/* Column 3: Formations */}
+          <div className="space-y-3">
+            <h4 className={`font-bold text-xs uppercase tracking-wider ${isLight ? 'text-slate-950' : 'text-white'}`}>Formations</h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <button onClick={() => onLaunchBoard('4-3-3')} className={`transition text-left active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
-                  4-3-3 Attack &amp; Holding
+                <button type="button" onClick={() => onLaunchBoard('4-3-3')} className="hover:text-purple-400 transition text-left cursor-pointer">
+                  4-3-3 Attack
                 </button>
               </li>
               <li>
-                <button onClick={() => onLaunchBoard('4-2-3-1')} className={`transition text-left active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
+                <button type="button" onClick={() => onLaunchBoard('4-2-3-1')} className="hover:text-purple-400 transition text-left cursor-pointer">
                   4-2-3-1 High Press
                 </button>
               </li>
               <li>
-                <button onClick={() => onLaunchBoard('3-5-2')} className={`transition text-left active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
-                  3-5-2 Wing-Back Overload
+                <button type="button" onClick={() => onLaunchBoard('3-5-2')} className="hover:text-purple-400 transition text-left cursor-pointer">
+                  3-5-2 Wing-Back
                 </button>
               </li>
               <li>
-                <button onClick={() => onLaunchBoard('5-3-2')} className={`transition text-left active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
-                  5-3-2 Solid Low Block
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onLaunchBoard('4-4-2')} className={`transition text-left active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
-                  4-4-2 Classic Flat
+                <button type="button" onClick={() => onLaunchBoard('5-3-2')} className="hover:text-purple-400 transition text-left cursor-pointer">
+                  5-3-2 Low Block
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Column 4: Policies & Documentation */}
-          <div className="space-y-3 font-display">
-            <h4 className={`font-bold text-xs uppercase tracking-wider ${isLight ? 'text-slate-950 font-black' : 'text-white'}`}>Legal &amp; Support</h4>
+          {/* Column 4: Legal & Support */}
+          <div className="space-y-3">
+            <h4 className={`font-bold text-xs uppercase tracking-wider ${isLight ? 'text-slate-950' : 'text-white'}`}>Legal &amp; Privacy</h4>
             <ul className="space-y-2 text-xs">
               <li>
                 <button
+                  type="button"
                   onClick={() => onOpenLegal('privacy')}
-                  className={`transition text-left flex items-center gap-1.5 active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}
+                  className="hover:text-purple-400 transition text-left flex items-center gap-1.5 cursor-pointer"
                 >
-                  <SvgDiamondBadge className={`w-3.5 h-3.5 ${isLight ? 'text-emerald-600' : 'text-emerald-500'}`} />
+                  <SvgDiamondBadge className="w-3.5 h-3.5 text-purple-400" />
                   <span>Privacy Policy</span>
                 </button>
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => onOpenLegal('terms')}
-                  className={`transition text-left flex items-center gap-1.5 active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}
+                  className="hover:text-purple-400 transition text-left flex items-center gap-1.5 cursor-pointer"
                 >
                   <FileText className="w-3.5 h-3.5 text-neutral-400" />
                   <span>Terms of Service</span>
@@ -1349,20 +1311,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => onOpenLegal('cookies')}
-                  className={`transition text-left flex items-center gap-1.5 active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}
+                  className="hover:text-purple-400 transition text-left flex items-center gap-1.5 cursor-pointer"
                 >
                   <Lock className="w-3.5 h-3.5 text-neutral-400" />
-                  <span>Cookie &amp; Storage</span>
+                  <span>Cookie Policy</span>
                 </button>
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={() => onOpenLegal('guide')}
-                  className={`transition text-left flex items-center gap-1.5 active:scale-95 cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}
+                  className="hover:text-purple-400 transition text-left flex items-center gap-1.5 cursor-pointer"
                 >
                   <SvgCrownStar className="w-3.5 h-3.5 text-amber-500" />
-                  <span>User Guide &amp; FAQ</span>
+                  <span>User Guide</span>
                 </button>
               </li>
             </ul>
@@ -1370,26 +1334,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         </div>
 
-        {/* Bottom Copyright & Disclaimer Row */}
-        <div className={`max-w-7xl mx-auto mt-8 sm:mt-14 pt-5 sm:pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-[11px] font-display text-neutral-500 text-center sm:text-left ${
+        {/* Bottom Disclaimer */}
+        <div className={`max-w-7xl mx-auto mt-10 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-neutral-500 ${
           isLight ? 'border-slate-200' : 'border-neutral-800'
         }`}>
-          <p>© 2026 Be Coach — Elite Football Tactical Board. All rights reserved.</p>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-            <button onClick={() => onOpenLegal('privacy')} className={`transition cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
+          <p>© 2026 Be Coach — Elite Football Tactical Board &amp; Studio. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <button type="button" onClick={() => onOpenLegal('privacy')} className="hover:text-purple-400 transition cursor-pointer">
               Privacy
             </button>
             <span>•</span>
-            <button onClick={() => onOpenLegal('terms')} className={`transition cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
+            <button type="button" onClick={() => onOpenLegal('terms')} className="hover:text-purple-400 transition cursor-pointer">
               Terms
             </button>
             <span>•</span>
-            <button onClick={() => onOpenLegal('cookies')} className={`transition cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
+            <button type="button" onClick={() => onOpenLegal('cookies')} className="hover:text-purple-400 transition cursor-pointer">
               Cookies
-            </button>
-            <span>•</span>
-            <button onClick={() => onOpenLegal('guide')} className={`transition cursor-pointer ${isLight ? 'hover:text-emerald-600' : 'hover:text-emerald-500'}`}>
-              Documentation
             </button>
           </div>
         </div>
@@ -1397,4 +1357,3 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     </div>
   );
 };
-

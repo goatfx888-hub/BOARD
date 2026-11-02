@@ -10,7 +10,7 @@ import { PRESET_SQUADS } from './data/presetSquads';
 import { getFormationById } from './data/formations';
 import { getRandomKitPair } from './utils/kitThemes';
 import { Shield, SlidersHorizontal, Maximize2, Minimize2, X } from 'lucide-react';
-import { LandingPage } from './components/LandingPage';
+import { VideoHomePage } from './components/VideoHomePage';
 import { TransitionGraphic } from './components/TransitionGraphic';
 import { TacticalBoardBackground } from './components/TacticalBoardBackground';
 import { LegalModal, LegalTabType } from './components/LegalModal';
@@ -27,7 +27,7 @@ import { useTheme } from './context/ThemeContext';
 export default function App() {
   const { theme } = useTheme();
   const isLight = theme === 'light';
-  const [currentView, setCurrentView] = useState<'landing' | 'board'>('landing');
+  const [currentView, setCurrentView] = useState<'home' | 'board'>('home');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionTargetName, setTransitionTargetName] = useState('11v11 Matchday Studio');
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
@@ -108,9 +108,8 @@ export default function App() {
     }
   };
 
-  // --- CTA Launch from Landing Page with Motion Graphic ---
+  // --- Launch Board from Full Resolution Video Home Page ---
   const handleLaunchBoard = (presetName?: string) => {
-    // Pick fresh, contrasting kit colors every time user enters the board
     const newKitPair = getRandomKitPair();
     setHomeSquad((prev) => ({
       ...prev,
@@ -121,7 +120,6 @@ export default function App() {
       kit: { ...newKitPair.awayKit },
     }));
 
-    // On computer/laptop, ensure the tactical board always opens in horizontal orientation
     if (typeof window !== 'undefined' && window.innerWidth >= 768) {
       setOrientation('horizontal');
     }
@@ -593,17 +591,14 @@ export default function App() {
 
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 relative ${
-      currentView === 'landing'
-        ? (isLight
-            ? 'bg-slate-100 text-slate-900 selection:bg-emerald-500 selection:text-white'
-            : 'bg-black text-slate-100 selection:bg-emerald-500 selection:text-slate-950')
+      currentView === 'home'
+        ? 'bg-[#07050d] text-white'
         : (isLight
             ? 'bg-slate-200/50 text-slate-900 selection:bg-emerald-500 selection:text-white'
             : 'bg-black/40 text-slate-100 selection:bg-emerald-500 selection:text-slate-950')
     }`}>
-      {/* Landing Home Page View */}
-      {currentView === 'landing' ? (
-        <LandingPage
+      {currentView === 'home' ? (
+        <VideoHomePage
           onLaunchBoard={handleLaunchBoard}
           onOpenLegal={handleOpenLegal}
         />
@@ -639,7 +634,7 @@ export default function App() {
             onExportImage={() => setIsExportModalOpen(true)}
             onOpenKitModal={() => setIsKitModalOpen(true)}
             onResetBoard={handleResetBoard}
-            onNavigateHome={() => setCurrentView('landing')}
+            onNavigateHome={() => setCurrentView('home')}
           />
 
           {/* Main Pitch & Tactical Board Area */}

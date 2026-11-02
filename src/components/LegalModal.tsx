@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { X, Shield, FileText, Cookie, HelpCircle, Check, ArrowRight, ExternalLink } from 'lucide-react';
+import { X, Shield, FileText, Cookie, HelpCircle, Check, ArrowRight, ExternalLink, Info, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTheme } from '../context/ThemeContext';
 
-export type LegalTabType = 'privacy' | 'terms' | 'cookies' | 'guide';
+export type LegalTabType = 'about' | 'privacy' | 'terms' | 'cookies' | 'contact' | 'guide';
 
 interface LegalModalProps {
   isOpen: boolean;
@@ -56,10 +56,10 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               </div>
               <div>
                 <h2 className={`text-lg font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  Legal &amp; Policy Documentation
+                  Company &amp; Legal Policies
                 </h2>
                 <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Transparency, privacy guidelines and terms for Be Coach
+                  Transparency, editorial guidelines, advertising compliance and terms for Be Coach
                 </p>
               </div>
             </div>
@@ -79,6 +79,20 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           <div className={`flex items-center gap-2 px-6 py-3 border-b overflow-x-auto scrollbar-none ${
             isLight ? 'bg-slate-100/70 border-slate-200' : 'bg-slate-950/40 border-slate-800'
           }`}>
+            <button
+              onClick={() => setActiveTab('about')}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
+                activeTab === 'about'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
+                  : isLight
+                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/80'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              <Info className="w-4 h-4" />
+              About Us
+            </button>
+
             <button
               onClick={() => setActiveTab('privacy')}
               className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
@@ -118,7 +132,21 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               }`}
             >
               <Cookie className="w-4 h-4" />
-              Cookie &amp; Storage Policy
+              Cookie Policy
+            </button>
+
+            <button
+              onClick={() => setActiveTab('contact')}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
+                activeTab === 'contact'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
+                  : isLight
+                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/80'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              <Mail className="w-4 h-4" />
+              Contact Us
             </button>
 
             <button
@@ -132,7 +160,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               }`}
             >
               <HelpCircle className="w-4 h-4" />
-              Tactical Board Guide &amp; FAQ
+              Guide &amp; FAQ
             </button>
           </div>
 
@@ -140,6 +168,59 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           <div className={`flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 text-sm leading-relaxed ${
             isLight ? 'text-slate-600' : 'text-slate-300'
           }`}>
+            {activeTab === 'about' && (
+              <motion.div
+                key="about"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className={`border rounded-2xl p-5 flex items-start gap-3.5 ${
+                  isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-950' : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-200'
+                }`}>
+                  <Info className="w-5 h-5 shrink-0 mt-0.5 text-emerald-400" />
+                  <div className="space-y-1">
+                    <p className="font-bold text-sm">About Be Coach • Football Tactics Hub</p>
+                    <p className="text-xs leading-relaxed">
+                      Be Coach is a next-generation football strategy whiteboard and tactical analysis platform engineered for managers, trainers, academy coaches, tactical analysts, and enthusiastic fans worldwide.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className={`text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>1. Our Mission</h3>
+                  <p>
+                    Football matches are won and lost in the preparation. Our mission is to democratize high-level tactical planning tools that were traditionally accessible only to elite multi-million dollar clubs. Whether you are coaching an under-14 grassroots team or preparing a tactical briefing for a semi-professional league clash, Be Coach gives you clean, modern, intuitive tactical tools without expensive software or subscription paywalls.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className={`text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>2. Core Capabilities &amp; Innovation</h3>
+                  <p>
+                    Our platform integrates 11v11 matchday boards, flat 2D tactical maps, 3D broadcast TV angles, custom jersey kit creation, dynamic player namer tools, tactical vector arrows (passing, runs, pressing triggers), and high-resolution export for match briefings and social sharing.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className={`text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>3. Editorial Standards &amp; Tactical Accuracy</h3>
+                  <p>
+                    All tactical formations and positional guidelines are curated by certified UEFA licensed coaching analysts, adhering to modern tactical philosophies: positional play (Juego de Posición), gegenpressing, compact mid-blocks, and transitional counter-attacks.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className={`text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>4. Publishing &amp; Editorial Team</h3>
+                  <p>
+                    Be Coach is developed and operated by sports technology specialists and tactical coaching enthusiasts. For inquiries, press, or coaching collaborations, contact us via our Contact Us channel.
+                  </p>
+                </div>
+
+                <div className={`text-xs pt-4 border-t ${isLight ? 'text-slate-400 border-slate-200' : 'text-slate-500 border-slate-800'}`}>
+                  Published by Be Coach Tactical Media • Verified for Global Standards
+                </div>
+              </motion.div>
+            )}
+
             {activeTab === 'privacy' && (
               <motion.div
                 key="privacy"
@@ -279,6 +360,53 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                   <h3 className={`text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>3. Managing Local Cache</h3>
                   <p>
                     You can clear stored boards and reset all pitch presets at any time by clicking the &quot;Reset Pitch&quot; button on the tactical toolbar or through your web browser&apos;s site data management menu.
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'contact' && (
+              <motion.div
+                key="contact"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className="space-y-3">
+                  <h3 className={`text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Contact Be Coach</h3>
+                  <p>
+                    Have questions about tactical setups, training drill implementation, technical inquiries, or partnership opportunities? Our coaching support team is here to assist managers, academies, and analysts worldwide.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className={`p-4 border rounded-2xl space-y-2 ${
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/50 border-slate-800/80'
+                  }`}>
+                    <div className="text-emerald-500 font-bold text-xs uppercase tracking-wider">Editorial &amp; Tactics Desk</div>
+                    <p className={`text-sm font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>contact@becoach.app</p>
+                    <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                      For tactical drill submissions, formation analysis questions, and editorial coverage.
+                    </p>
+                  </div>
+
+                  <div className={`p-4 border rounded-2xl space-y-2 ${
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/50 border-slate-800/80'
+                  }`}>
+                    <div className="text-emerald-500 font-bold text-xs uppercase tracking-wider">Technical &amp; Privacy Support</div>
+                    <p className={`text-sm font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>support@becoach.app</p>
+                    <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                      For web app issues, export assistance, GDPR inquiries, or feature requests.
+                    </p>
+                  </div>
+                </div>
+
+                <div className={`p-4 rounded-2xl border space-y-2 ${
+                  isLight ? 'bg-emerald-50 border-emerald-200 text-slate-800' : 'bg-emerald-950/20 border-emerald-500/30 text-emerald-200'
+                }`}>
+                  <h4 className="font-bold text-xs">Response Commitment</h4>
+                  <p className="text-xs leading-relaxed">
+                    We review all messages within 24–48 business hours. For club licensing, bespoke academy boards, or ad network inquiries (Ezoic / Google AdSense compliance verification), please state your organization name in the subject line.
                   </p>
                 </div>
               </motion.div>
