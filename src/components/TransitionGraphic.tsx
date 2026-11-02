@@ -63,22 +63,25 @@ export const TransitionGraphic: React.FC<TransitionGraphicProps> = ({
       return;
     }
 
-    // Phase 1: Whiteboard & Radar mapping
-    const t1 = setTimeout(() => setPhase(1), 320);
-    // Phase 2: Formations & Player tokens locking
-    const t2 = setTimeout(() => setPhase(2), 700);
-    // Phase 3: Match Ready
-    const t3 = setTimeout(() => setPhase(3), 1150);
-    // Complete and unveil board
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const t1 = setTimeout(() => setPhase(1), isMobile ? 220 : 320);
+    const t2 = setTimeout(() => setPhase(2), isMobile ? 500 : 700);
+    const t3 = setTimeout(() => setPhase(3), isMobile ? 800 : 1150);
     const t4 = setTimeout(() => {
       onComplete();
-    }, 1500);
+    }, isMobile ? 1050 : 1500);
+
+    // Hard fallback safety timer to guarantee board is always unveiled
+    const fallbackTimer = setTimeout(() => {
+      onComplete();
+    }, 2200);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
       clearTimeout(t4);
+      clearTimeout(fallbackTimer);
     };
   }, [isActive, onComplete]);
 
@@ -90,24 +93,16 @@ export const TransitionGraphic: React.FC<TransitionGraphicProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, scale: 1.05 }}
-        transition={{ duration: 0.25 }}
-        className="fixed inset-0 z-[999] bg-[#030805]/95 backdrop-blur-3xl flex flex-col items-center justify-center p-6 select-none overflow-hidden"
+        transition={{ duration: 0.2 }}
+        onClick={onComplete}
+        className="fixed inset-0 z-[999] bg-[#030805]/98 backdrop-blur-3xl flex flex-col items-center justify-center p-4 sm:p-6 select-none overflow-hidden cursor-pointer"
+        title="Click or tap to skip transition"
       >
-        {/* ========================================================================= */}
-        {/* 1. CINEMATIC BACKGROUND VIDEO / TEXTURE LAYER                             */}
-        {/* ========================================================================= */}
-        <div className="absolute inset-0 pointer-events-none opacity-30 overflow-hidden">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover filter blur-md scale-110"
-          >
-            <source src="/assets/aistudio/Video_Project_12_9d0a3a03.mp4" type="video/mp4" />
-            <source src="/hero_coach_video.mp4" type="video/mp4" />
-          </video>
-        </div>
+        {/* Dynamic Stadium Lighting Rays */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-600/20 via-[#030805]/90 to-[#030805] pointer-events-none" />
+        
+        {/* Animated Cybernetic Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#00df8210_1px,transparent_1px),linear-gradient(to_bottom,#00df8210_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
         {/* Stadium green spotlights & radial glow */}
         <div className="absolute inset-0 bg-radial from-emerald-500/15 via-[#030805]/85 to-[#030805] pointer-events-none" />

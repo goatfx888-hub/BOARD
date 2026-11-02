@@ -48,7 +48,12 @@ export default function App() {
       kit: { ...pair.awayKit },
     };
   });
-  const [matchMode, setMatchMode] = useState<'home_vs_away' | 'home_only' | 'away_only'>('home_vs_away');
+  const [matchMode, setMatchMode] = useState<'home_vs_away' | 'home_only' | 'away_only'>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return 'home_only';
+    }
+    return 'home_vs_away';
+  });
   const [activeTeam, setActiveTeam] = useState<'home' | 'away'>('home');
   const [showNames, setShowNames] = useState(false);
   const [tokenDisplayMode, setTokenDisplayMode] = useState<'number' | 'position'>('number');
@@ -120,8 +125,14 @@ export default function App() {
       kit: { ...newKitPair.awayKit },
     }));
 
-    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-      setOrientation('horizontal');
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 768) {
+        setOrientation('vertical');
+        setMobileView('pitch');
+        setMatchMode('home_only');
+      } else {
+        setOrientation('horizontal');
+      }
     }
 
     const targetTitle = presetName
@@ -148,8 +159,13 @@ export default function App() {
   };
 
   const handleTransitionComplete = () => {
-    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-      setOrientation('horizontal');
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth >= 768) {
+        setOrientation('horizontal');
+      } else {
+        setOrientation('vertical');
+        setMobileView('pitch');
+      }
     }
     setIsTransitioning(false);
     setCurrentView('board');

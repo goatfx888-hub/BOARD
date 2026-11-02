@@ -757,7 +757,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* ========================================================================= */}
         {/* MOBILE & TABLET COMPACT TOP BAR (< LG BREAKPOINT) */}
         {/* ========================================================================= */}
-        <div className="flex lg:hidden items-center justify-between gap-2 py-0.5">
+        <div className="flex lg:hidden items-center justify-between gap-1.5 sm:gap-2 py-0.5 overflow-x-auto scrollbar-none">
           {/* Logo & Quick Brand Title */}
           <div
             onClick={onNavigateHome}

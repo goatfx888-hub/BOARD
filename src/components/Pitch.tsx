@@ -1303,17 +1303,17 @@ const PitchComponent: React.FC<PitchProps> = ({
 
   const containerAspect = orientation === 'horizontal'
     ? 'aspect-[10/7] w-full'
-    : 'aspect-[9/16] sm:aspect-[7/10] w-full';
+    : 'aspect-[7/10] w-full max-h-[74dvh] max-w-[min(100%,calc(74dvh*0.7))] mx-auto';
 
   // Responsive container sizing: fills full screen resolution in fullscreen mode
   const pitchWidthClass = isFullscreen
     ? 'w-full h-full max-w-none flex-1 flex flex-col items-center justify-center overflow-hidden'
-    : (orientation === 'horizontal' ? 'max-w-4xl md:max-w-[780px] lg:max-w-[1020px] xl:max-w-[1060px]' : 'w-full max-w-[460px] sm:max-w-2xl md:max-w-[640px] lg:max-w-[720px] xl:max-w-[760px]');
+    : (orientation === 'horizontal' ? 'max-w-4xl md:max-w-[780px] lg:max-w-[1020px] xl:max-w-[1060px]' : 'w-full max-w-[420px] sm:max-w-2xl md:max-w-[640px] lg:max-w-[720px] xl:max-w-[760px]');
 
   const pitchAspectClass = isFullscreen
     ? (orientation === 'horizontal'
         ? 'w-full h-full max-w-full max-h-full aspect-[10/7] flex items-center justify-center mx-auto'
-        : 'w-full h-full max-w-full max-h-full aspect-[9/16] sm:aspect-[7/10] flex items-center justify-center mx-auto')
+        : 'w-full h-full max-w-full max-h-full aspect-[7/10] flex items-center justify-center mx-auto')
     : `w-full ${containerAspect}`;
 
   // In fullscreen mode on desktop (md+ screens), drawing can stay always ready; on mobile, it follows whether Tools are open
@@ -1327,11 +1327,11 @@ const PitchComponent: React.FC<PitchProps> = ({
 
   return (
     <div className={`relative w-full ${pitchWidthClass} ${isFullscreen ? 'ios-fs-pitch-container' : ''} mx-auto flex flex-col items-center select-none ${isFullscreen ? 'p-0.5 sm:p-1.5 gap-1 sm:gap-1.5 justify-between min-h-0' : 'py-1 gap-2'}`}>
-      {/* Match Teams & Drawing Tools Control Bar (Floating pill in fullscreen, standard in normal) */}
+      {/* Match Teams & Drawing Tools Control Bar (Floating pill in fullscreen, compact single-row scrollable on mobile) */}
       <div className={`w-auto max-w-full ${
         isFullscreen
           ? 'flex flex-nowrap overflow-x-auto justify-center px-2.5 sm:px-3 py-1 sm:py-1.5 scrollbar-none gap-1 sm:gap-2 rounded-2xl'
-          : 'flex flex-wrap items-center justify-center px-3 py-1.5 gap-1.5 sm:gap-2.5 rounded-xl'
+          : 'flex items-center justify-start sm:justify-center px-2.5 sm:px-3 py-1 sm:py-1.5 gap-1 sm:gap-2 rounded-xl overflow-x-auto scrollbar-none flex-nowrap'
       } backdrop-blur-md shadow-md text-xs shrink-0 z-30 ${
         isLight
           ? 'bg-white/95 border border-slate-200 shadow-slate-200/60 text-slate-800'
@@ -1339,7 +1339,7 @@ const PitchComponent: React.FC<PitchProps> = ({
       }`}>
         {/* Team Selector */}
         {onMatchModeChange ? (
-          <div className={`flex items-center p-1 rounded-xl border gap-1 shrink-0 ${
+          <div className={`flex items-center p-0.5 sm:p-1 rounded-xl border gap-0.5 sm:gap-1 shrink-0 ${
             isLight ? 'bg-slate-100/90 border-slate-200' : 'bg-black border-neutral-800 shadow-inner'
           }`}>
             <button
@@ -1348,7 +1348,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                 onSelectTeam?.('home');
                 positionBallWithGoalkeeper('home_only');
               }}
-              className={`px-1.5 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
+              className={`px-2 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
                 matchMode === 'home_only'
                   ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold'
                   : isLight
@@ -1361,13 +1361,13 @@ const PitchComponent: React.FC<PitchProps> = ({
                 className="w-2.5 h-2.5 rounded-full border border-slate-900 shrink-0"
                 style={{ backgroundColor: squad.kit.primaryColor }}
               />
-              <span className={isFullscreen ? 'hidden sm:inline' : ''}>Home Team</span>
-              <span className={isFullscreen ? 'inline sm:hidden' : 'hidden'}>Home</span>
+              <span className="hidden sm:inline">Home Team</span>
+              <span className="inline sm:hidden">Home</span>
             </button>
 
             <button
               onClick={() => onMatchModeChange('home_vs_away')}
-              className={`px-1.5 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
+              className={`px-2 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
                 matchMode === 'home_vs_away'
                   ? 'bg-amber-500 text-slate-950 shadow-md font-extrabold'
                   : isLight
@@ -1376,8 +1376,8 @@ const PitchComponent: React.FC<PitchProps> = ({
               }`}
               title="Display both teams (Home vs Away)"
             >
-              <span className={isFullscreen ? 'hidden sm:inline' : ''}>Both (VS)</span>
-              <span className={isFullscreen ? 'inline sm:hidden' : 'hidden'}>Both</span>
+              <span className="hidden sm:inline">Both (VS)</span>
+              <span className="inline sm:hidden">Both</span>
             </button>
 
             {awaySquad && (
@@ -1387,7 +1387,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                   onSelectTeam?.('away');
                   positionBallWithGoalkeeper('away_only');
                 }}
-                className={`px-1.5 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
+                className={`px-2 sm:px-2.5 py-1 rounded-lg font-black text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
                   matchMode === 'away_only'
                     ? 'bg-rose-500 text-white shadow-md font-extrabold'
                     : isLight
@@ -1400,8 +1400,8 @@ const PitchComponent: React.FC<PitchProps> = ({
                   className="w-2.5 h-2.5 rounded-full border border-slate-900 shrink-0"
                   style={{ backgroundColor: awaySquad.kit.primaryColor }}
                 />
-                <span className={isFullscreen ? 'hidden sm:inline' : ''}>Away Team</span>
-                <span className={isFullscreen ? 'inline sm:hidden' : 'hidden'}>Away</span>
+                <span className="hidden sm:inline">Away Team</span>
+                <span className="inline sm:hidden">Away</span>
               </button>
             )}
           </div>
@@ -1958,7 +1958,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                     showName={showNames}
                     tokenDisplayMode={tokenDisplayMode}
                     teamType="home"
-                    size={matchMode === 'home_vs_away' ? 'sm' : 'md'}
+                    size={matchMode === 'home_vs_away' || orientation === 'vertical' ? 'sm' : 'md'}
                   />
                 </div>
               );
@@ -2024,7 +2024,7 @@ const PitchComponent: React.FC<PitchProps> = ({
                       showName={showNames}
                       tokenDisplayMode={tokenDisplayMode}
                       teamType="away"
-                      size={matchMode === 'home_vs_away' ? 'sm' : 'md'}
+                      size={matchMode === 'home_vs_away' || orientation === 'vertical' ? 'sm' : 'md'}
                     />
                   </div>
                 );
