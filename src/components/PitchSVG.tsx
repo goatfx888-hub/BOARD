@@ -22,11 +22,30 @@ const PitchSVGComponent: React.FC<PitchSVGProps> = ({
   className = '',
   children,
 }) => {
-  // Mathematically round circle and arc radii for 700x1000 vertical pitch (7:10 ratio)
-  const circleRy = 95;
-  const spotRy = 4.5;
-  const spotGlowRy = 9;
-  const cornerRy = 25;
+  // Check if viewing in mobile portrait mode (where 9:16 aspect is used)
+  const [isMobilePortrait, setIsMobilePortrait] = React.useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 640;
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobilePortrait(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // In 9:16 mobile portrait mode, the vertical SVG is rendered taller (height scale = (16/9)/(10/7) ≈ 1.244).
+  // Multiplying ry by (1 / 1.244) ≈ 0.8035 restores circles and arcs to 100% mathematically round shapes.
+  const isMobileScale = orientation === 'vertical' && isMobilePortrait;
+  const circleRy = isMobileScale ? 76 : 95;
+  const spotRy = isMobileScale ? 3.6 : 4.5;
+  const spotGlowRy = isMobileScale ? 7.2 : 9;
+  const cornerRy = isMobileScale ? 20 : 25;
 
   // Rich, realistic, world-class stadium turf base background
   const getPitchBackground = () => {
@@ -753,22 +772,22 @@ const PitchSVGComponent: React.FC<PitchSVGProps> = ({
             <>
               <rect x="0" y="0" width="700" height="1000" fill="url(#grass-stripes-v)" opacity="0.5" />
               {/* Natural worn center/goal turf spots */}
-              <ellipse cx="350" cy="500" rx="110" ry={110} fill="rgba(161, 98, 7, 0.08)" />
-              <ellipse cx="350" cy="130" rx="65" ry={65} fill="rgba(161, 98, 7, 0.12)" />
-              <ellipse cx="350" cy="870" rx="65" ry={65} fill="rgba(161, 98, 7, 0.12)" />
+              <ellipse cx="350" cy="500" rx="110" ry={isMobileScale ? 88 : 110} fill="rgba(161, 98, 7, 0.08)" />
+              <ellipse cx="350" cy="130" rx="65" ry={isMobileScale ? 52 : 65} fill="rgba(161, 98, 7, 0.12)" />
+              <ellipse cx="350" cy="870" rx="65" ry={isMobileScale ? 52 : 65} fill="rgba(161, 98, 7, 0.12)" />
             </>
           )}
 
           {/* Goal Scuff Areas Vertical */}
           <g opacity={texture === 'tactical_dark' ? 0 : 0.35}>
             {/* Top Goalmouth Scuff */}
-            <ellipse cx="350" cy="65" rx="40" ry={14} fill="rgba(120, 53, 15, 0.20)" />
-            <ellipse cx="350" cy="160" rx="8" ry={8} fill="rgba(120, 53, 15, 0.14)" />
+            <ellipse cx="350" cy="65" rx="40" ry={isMobileScale ? 11 : 14} fill="rgba(120, 53, 15, 0.20)" />
+            <ellipse cx="350" cy="160" rx="8" ry={isMobileScale ? 6.4 : 8} fill="rgba(120, 53, 15, 0.14)" />
             {/* Bottom Goalmouth Scuff */}
-            <ellipse cx="350" cy="935" rx="40" ry={14} fill="rgba(120, 53, 15, 0.20)" />
-            <ellipse cx="350" cy="840" rx="8" ry={8} fill="rgba(120, 53, 15, 0.14)" />
+            <ellipse cx="350" cy="935" rx="40" ry={isMobileScale ? 11 : 14} fill="rgba(120, 53, 15, 0.20)" />
+            <ellipse cx="350" cy="840" rx="8" ry={isMobileScale ? 6.4 : 8} fill="rgba(120, 53, 15, 0.14)" />
             {/* Center Spot Scuff */}
-            <ellipse cx="350" cy="500" rx="7" ry={7} fill="rgba(120, 53, 15, 0.10)" />
+            <ellipse cx="350" cy="500" rx="7" ry={isMobileScale ? 5.6 : 7} fill="rgba(120, 53, 15, 0.10)" />
           </g>
 
           {/* Goal Structure Vertical (Top & Bottom Goals) */}

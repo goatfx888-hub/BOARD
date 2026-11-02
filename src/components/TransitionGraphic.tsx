@@ -63,25 +63,22 @@ export const TransitionGraphic: React.FC<TransitionGraphicProps> = ({
       return;
     }
 
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const t1 = setTimeout(() => setPhase(1), isMobile ? 220 : 320);
-    const t2 = setTimeout(() => setPhase(2), isMobile ? 500 : 700);
-    const t3 = setTimeout(() => setPhase(3), isMobile ? 800 : 1150);
+    // Phase 1: Whiteboard & Radar mapping
+    const t1 = setTimeout(() => setPhase(1), 320);
+    // Phase 2: Formations & Player tokens locking
+    const t2 = setTimeout(() => setPhase(2), 700);
+    // Phase 3: Match Ready
+    const t3 = setTimeout(() => setPhase(3), 1150);
+    // Complete and unveil board
     const t4 = setTimeout(() => {
       onComplete();
-    }, isMobile ? 1050 : 1500);
-
-    // Hard fallback safety timer to guarantee board is always unveiled
-    const fallbackTimer = setTimeout(() => {
-      onComplete();
-    }, 2200);
+    }, 1500);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
       clearTimeout(t4);
-      clearTimeout(fallbackTimer);
     };
   }, [isActive, onComplete]);
 
