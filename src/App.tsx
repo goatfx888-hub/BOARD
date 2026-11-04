@@ -11,7 +11,6 @@ import { getFormationById } from './data/formations';
 import { getRandomKitPair } from './utils/kitThemes';
 import { Shield, SlidersHorizontal, Maximize2, Minimize2, X } from 'lucide-react';
 import { VideoHomePage } from './components/VideoHomePage';
-import { TransitionGraphic } from './components/TransitionGraphic';
 import { TacticalBoardBackground } from './components/TacticalBoardBackground';
 import { LegalModal, LegalTabType } from './components/LegalModal';
 import {
@@ -28,8 +27,6 @@ export default function App() {
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const [currentView, setCurrentView] = useState<'home' | 'board'>('home');
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [transitionTargetName, setTransitionTargetName] = useState('11v11 Matchday Studio');
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState<LegalTabType>('privacy');
 
@@ -124,11 +121,6 @@ export default function App() {
       setOrientation('horizontal');
     }
 
-    const targetTitle = presetName
-      ? `${presetName} Tactical Board`
-      : 'Full Matchday Tactical Studio';
-    setTransitionTargetName(targetTitle);
-
     if (presetName) {
       const lower = presetName.toLowerCase();
       if (lower.includes('4-3-3')) {
@@ -144,14 +136,7 @@ export default function App() {
       }
     }
 
-    setIsTransitioning(true);
-  };
-
-  const handleTransitionComplete = () => {
-    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-      setOrientation('horizontal');
-    }
-    setIsTransitioning(false);
+    // Direct launch into tactical board without motion graphic
     setCurrentView('board');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -776,12 +761,6 @@ export default function App() {
         </>
       )}
 
-      {/* Motion Graphic Screen Transition */}
-      <TransitionGraphic
-        isActive={isTransitioning}
-        onComplete={handleTransitionComplete}
-        targetPresetName={transitionTargetName}
-      />
 
       {/* Policy & Legal Documentation Modal */}
       <LegalModal
